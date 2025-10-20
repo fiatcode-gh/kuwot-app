@@ -44,20 +44,19 @@ workflows:
         ignore_failure: false
       - name: Build AAB with Flutter
         script: |
-          BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))      
+          BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME") + 1))      
           flutter build appbundle --release \
             --dart-define=QUOTE_API_SCHEME=$QUOTE_API_SCHEME \
             --dart-define=QUOTE_API_HOST=$QUOTE_API_HOST \
-            --dart-define=AUTH_PUBLIC_KEY=$AUTH_PUBLIC_KEY \
             --dart-define=SENTRY_DSN=$SENTRY_DSN \
-            --build-name=1.1.$BUILD_NUMBER \
+            --build-name=1.2.$BUILD_NUMBER \
             --build-number=$BUILD_NUMBER
 
     artifacts:
       - build/**/outputs/**/*.aab
       - build/**/outputs/**/mapping.txt
       - flutter_drive.log
-      
+
     publishing:
       google_play:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
