@@ -14,15 +14,15 @@ class InAppPurchaseListener extends StatelessWidget {
     return BlocListener<PurchaseDetailsCubit, List<PurchaseDetails>>(
       listener: (context, state) {
         if (state.last.status == PurchaseStatus.purchased) {
-          showSnackbar('Coffee received, thank you! ☕');
+          showSnackBar('Coffee received, thank you! ☕');
         }
 
         if (state.last.status == PurchaseStatus.pending) {
-          showSnackbar('Coffee is on the way! ☕');
+          showSnackBar('Coffee is on the way! ☕');
         }
 
         if (state.last.status == PurchaseStatus.error) {
-          showSnackbar('Something went wrong, failed to send coffee 😢');
+          showSnackBar('Something went wrong, failed to send coffee 😢');
         }
       },
       child: child,
