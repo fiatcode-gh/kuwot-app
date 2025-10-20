@@ -1,0 +1,58 @@
+name: kuwot
+description: "A random quote generator app"
+publish_to: 'none'
+version: 1.1.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  auto_route: ^10.1.0+1
+  bloc_concurrency: ^0.3.0
+  cached_network_image: ^3.4.1
+  encrypt: ^5.0.3
+  equatable: ^2.0.5
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  flutter_launcher_icons: ^0.14.4
+  flutter_svg: ^2.0.10+1
+  font_awesome_flutter: ^10.7.0
+  fpdart: ^1.1.0
+  freezed_annotation: ^3.0.0
+  get_it: ^8.0.3
+  google_fonts: ^6.2.1
+  http: ^1.2.1
+  in_app_purchase: ^3.2.0
+  in_app_update: ^4.2.3
+  json_annotation: ^4.9.0
+  package_info_plus: ^8.0.2
+  pointycastle: ^3.9.1
+  screenshot: ^3.0.0
+  sentry_flutter: ^9.2.0
+  share_plus: ^11.0.0
+  shared_preferences: ^2.2.3
+  url_launcher: ^6.3.0
+  uuid: ^4.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.9
+  auto_route_generator: ^10.1.0
+  freezed: ^3.0.6
+  json_serializable: ^6.8.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/svgs/
+
+flutter_launcher_icons:
+  android: true
+  image_path_android: 'assets/pngs/chat-quote.png'
+  adaptive_icon_foreground: 'assets/pngs/chat-quote.png'
+  adaptive_icon_background: '#ffffff'

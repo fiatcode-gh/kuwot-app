@@ -1,0 +1,52 @@
+[
+    {
+        "id": "en",
+        "lang": "English",
+        "tableName": "quotes"
+    },
+    {
+        "id": "id",
+        "lang": "Indonesian",
+        "tableName": "quotes_id"
+    },
+    {
+        "id": "es",
+        "lang": "Spanish",
+        "tableName": "quotes_es"
+    },
+    {
+        "id": "de",
+        "lang": "Dutch",
+        "tableName": "quotes_de"
+    },
+    {
+        "id": "fr",
+        "lang": "French",
+        "tableName": "quotes_fr"
+    },
+    {
+        "id": "hi",
+        "lang": "Hindi",
+        "tableName": "quotes_hi"
+    },
+    {
+        "id": "it",
+        "lang": "Italian",
+        "tableName": "quotes_it"
+    },
+    {
+        "id": "ru",
+        "lang": "Russian",
+        "tableName": "quotes_ru"
+    },
+    {
+        "id": "zh-CN",
+        "lang": "Chinese (Simplified)",
+        "tableName": "quotes_zhcn"
+    },
+    {
+        "id": "ja",
+        "lang": "Japanese",
+        "tableName": "quotes_ja"
+    }
+]
