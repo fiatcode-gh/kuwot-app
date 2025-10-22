@@ -8,7 +8,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: 'dev'
+        - pattern: "dev"
           include: true
           source: false
 
@@ -20,7 +20,7 @@ workflows:
         - google_play_credentials
       vars:
         PACKAGE_NAME: "com.dhemasnurjaya.kuwot"
-        GOOGLE_PLAY_TRACK: "alpha"
+        GOOGLE_PLAY_TRACK: alpha
       flutter: stable
 
     cache:
@@ -44,7 +44,7 @@ workflows:
         ignore_failure: false
       - name: Build AAB with Flutter
         script: |
-          BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME") + 1))      
+          BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))
           flutter build appbundle --release \
             --dart-define=QUOTE_API_SCHEME=$QUOTE_API_SCHEME \
             --dart-define=QUOTE_API_HOST=$QUOTE_API_HOST \
