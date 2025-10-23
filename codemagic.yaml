@@ -62,4 +62,4 @@ workflows:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
         track: $GOOGLE_PLAY_TRACK
         submit_as_draft: true
-        changesNotSentForReview: true
+        changes_not_sent_for_review: true
