@@ -1,6 +1,8 @@
 # Kuwot
 Daily quote app with beautiful pics from [Unsplash](https://unsplash.com/), built with Flutter 🚀
 
+<a href='https://play.google.com/store/apps/details?id=com.dhemasnurjaya.kuwot'><img alt='Get it on Google Play' width="200" src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
+
 # Environment Variables
 ## Visual Studio Code
 Add or modify `.vscode/launch.json`, fills out the required environment variables.
