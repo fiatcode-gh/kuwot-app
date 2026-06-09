@@ -118,7 +118,7 @@ class AboutImageDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildUserInfoChip({required IconData icon, required String text}) {
+  Widget _buildUserInfoChip({required FaIconData icon, required String text}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(

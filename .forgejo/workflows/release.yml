@@ -1,0 +1,67 @@
+name: Release
+
+# Build a signed Android App Bundle when a version tag is pushed, e.g. `git tag v1.1.5 && git push origin v1.1.5`.
+# The .aab is published as a downloadable workflow artifact; upload it to Google Play manually.
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build-aab:
+    runs-on: docker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: https://github.com/android-actions/setup-android@v3
+
+      - name: Set up Flutter
+        uses: https://github.com/subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build
+
+      - name: Decode signing keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "${{ forgejo.workspace }}/upload-keystore.jks"
+
+      - name: Build signed AAB
+        env:
+          KEYSTORE_PATH: ${{ forgejo.workspace }}/upload-keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Tag is the Flutter version string prefixed with v: v<name>+<code>, e.g. v1.2.29+29.
+          # versionCode (the +N) must strictly increase and exceed what's live on Play.
+          VERSION="${FORGEJO_REF_NAME#v}"
+          if [ "$VERSION" = "${VERSION#*+}" ]; then
+            echo "::error::Tag '$FORGEJO_REF_NAME' must be v<name>+<code>, e.g. v1.2.29+29" && exit 1
+          fi
+          BUILD_NAME="${VERSION%%+*}"
+          BUILD_CODE="${VERSION##*+}"
+          echo "Building versionName=$BUILD_NAME versionCode=$BUILD_CODE"
+          flutter build appbundle --release \
+            --build-name="$BUILD_NAME" \
+            --build-number="$BUILD_CODE" \
+            --dart-define=QUOTE_API_SCHEME="${{ vars.QUOTE_API_SCHEME }}" \
+            --dart-define=QUOTE_API_HOST="${{ vars.QUOTE_API_HOST }}" \
+            --dart-define=SENTRY_DSN="${{ vars.SENTRY_DSN }}"
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: kuwot-${{ forgejo.ref_name }}-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error

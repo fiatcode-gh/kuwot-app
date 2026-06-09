@@ -30,7 +30,6 @@ void main() {
     dataSource = KuwotApiRemoteApiImpl(env: mockEnv, network: mockNetwork);
 
     // global stubs
-    when(() => mockEnv.authPublicKey).thenReturn('test');
     when(() => mockEnv.quoteApiScheme).thenReturn('http');
     when(() => mockEnv.quoteApiHost).thenReturn('10.0.2.2');
     when(() => mockEnv.quoteApiPort).thenReturn(8080);

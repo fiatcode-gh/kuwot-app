@@ -7,8 +7,6 @@ abstract class Env {
 
   int? get quoteApiPort;
 
-  String get authPublicKey;
-
   String get sentryDsn;
 }
 
@@ -22,9 +20,6 @@ class EnvImpl implements Env {
   @override
   int? get quoteApiPort =>
       int.tryParse(const String.fromEnvironment('QUOTE_API_PORT'));
-
-  @override
-  String get authPublicKey => const String.fromEnvironment('AUTH_PUBLIC_KEY');
 
   @override
   String get sentryDsn => const String.fromEnvironment('SENTRY_DSN');
