@@ -9,7 +9,6 @@ environment:
 dependencies:
   auto_route: ^11.1.0
   bloc_concurrency: ^0.3.0
-  cached_network_image: ^3.4.1
   equatable: ^2.0.5
   flutter:
     sdk: flutter
@@ -21,7 +20,6 @@ dependencies:
   freezed_annotation: ^3.0.0
   get_it: ^9.2.1
   google_fonts: ^8.1.0
-  http: ^1.2.1
   in_app_purchase: ^3.2.0
   in_app_update: ^4.2.3
   json_annotation: ^4.12.0
@@ -41,12 +39,14 @@ dev_dependencies:
   freezed: ^3.0.6
   json_serializable: ^6.8.0
   mocktail: ^1.0.4
+  bloc_test: ^10.0.0
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/svgs/
+    - assets/data/
 
 flutter_launcher_icons:
   android: true

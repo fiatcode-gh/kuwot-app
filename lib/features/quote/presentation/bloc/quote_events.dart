@@ -10,12 +10,3 @@ class GetQuoteEvent extends QuoteEvent {
   @override
   List<Object> get props => [];
 }
-
-class GetTranslatedQuoteEvent extends QuoteEvent {
-  final TranslationTarget translationTarget;
-
-  const GetTranslatedQuoteEvent(this.translationTarget);
-
-  @override
-  List<Object> get props => [translationTarget];
-}

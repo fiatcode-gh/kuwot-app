@@ -4,14 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:kuwot/core/data/local/translation_target_config.dart';
 import 'package:kuwot/core/router/app_router.gr.dart';
-import 'package:kuwot/features/quote/data/data_sources/remote/kuwot_api_remote_data_source.dart';
-import 'package:kuwot/features/quote/presentation/bloc/background_images_bloc.dart';
+import 'package:kuwot/features/quote/presentation/bloc/background_bloc.dart';
 import 'package:kuwot/features/quote/presentation/bloc/quote_bloc.dart';
-import 'package:kuwot/features/quote/presentation/widgets/background_image_widget.dart';
+import 'package:kuwot/features/quote/presentation/widgets/background_widget.dart';
 import 'package:kuwot/features/quote/presentation/widgets/quote_widget.dart';
-import 'package:kuwot/features/quote/presentation/widgets/translate_target_dialog.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -25,22 +22,23 @@ class QuotePage extends StatefulWidget {
 
 class _QuotePageState extends State<QuotePage> {
   final _screenshotController = ScreenshotController();
-  int _backgroundIndex = 0;
-  bool _isSharingQuote = false;
 
   late QuoteBloc _dailyQuoteBloc;
-  late BackgroundImagesBloc _backgroundImagesBloc;
+  late BackgroundBloc _backgroundBloc;
+
+  // The background is decoupled from the quote: it is seeded once from the
+  // first loaded quote (so each launch varies), then only the background
+  // button changes it. Getting a new quote leaves the background untouched.
+  bool _backgroundSeeded = false;
 
   @override
   void initState() {
     super.initState();
 
     _dailyQuoteBloc = context.read<QuoteBloc>();
-    _backgroundImagesBloc = context.read<BackgroundImagesBloc>();
+    _backgroundBloc = context.read<BackgroundBloc>();
 
-    // get daily quote & background photos
     _dailyQuoteBloc.add(const GetQuoteEvent());
-    _backgroundImagesBloc.add(const GetBackgroundImagesEvent());
   }
 
   @override
@@ -107,9 +105,15 @@ class _QuotePageState extends State<QuotePage> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          BackgroundPhotoWidget(
-            backgroundIndex: _backgroundIndex,
-            hideImageInfoButton: _isSharingQuote,
+          BlocListener<QuoteBloc, QuoteState>(
+            listenWhen: (_, s) => s is QuoteLoadedState && !_backgroundSeeded,
+            listener: (context, s) {
+              if (s is QuoteLoadedState) {
+                _backgroundSeeded = true;
+                _backgroundBloc.add(SetQuoteBackground(s.quote.id));
+              }
+            },
+            child: const BackgroundWidget(),
           ),
           const Align(alignment: Alignment.center, child: QuoteWidget()),
         ],
@@ -129,22 +133,6 @@ class _QuotePageState extends State<QuotePage> {
         child: _buildQuoteActionButton(
           onPressed: _cycleBackground,
           icon: const FaIcon(FontAwesomeIcons.image),
-        ),
-      ),
-      Expanded(
-        child: _buildQuoteActionButton(
-          onPressed: () async {
-            final result = await showAdaptiveDialog<TranslationTarget?>(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => const TranslateTargetDialog(),
-            );
-
-            if (result != null) {
-              _dailyQuoteBloc.add(GetTranslatedQuoteEvent(result));
-            }
-          },
-          icon: const FaIcon(FontAwesomeIcons.language),
         ),
       ),
       Expanded(
@@ -184,15 +172,11 @@ class _QuotePageState extends State<QuotePage> {
   }
 
   void _cycleBackground() {
-    setState(() {
-      _backgroundIndex = ++_backgroundIndex % imagesPerPage;
-    });
+    _backgroundBloc.add(const CycleBackground());
   }
 
   Future<void> _shareQuote() async {
-    setState(() => _isSharingQuote = true);
     final image = await _screenshotController.capture();
-    setState(() => _isSharingQuote = false);
     if (image == null) return;
 
     final shareParams = ShareParams(

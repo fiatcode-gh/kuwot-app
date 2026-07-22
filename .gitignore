@@ -48,3 +48,6 @@ lib/core/env.g.dart
 
 # Local-only docs (AI-generated runbooks kept on disk, not committed)
 docs/forgejo-ci.md
+
+# AI-generated design docs / specs (kept local)
+docs/superpowers/

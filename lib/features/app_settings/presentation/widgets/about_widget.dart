@@ -23,15 +23,8 @@ class AboutWidget extends StatelessWidget {
           context,
           title: 'Quotes-500K',
           description:
-              'Large quotes dataset by Shivali Goel, Rishi Madhok, Shweta Garg. Initially created for "Proposing Contextually Relevant Quotes for Images" journal.',
+              'This app ships a curated subset of the quotes dataset by Shivali Goel, Rishi Madhok, Shweta Garg. Initially created for "Proposing Contextually Relevant Quotes for Images" journal.',
           url: 'https://github.com/ShivaliGoel/Quotes-500K',
-        ),
-        _buildCreditItem(
-          context,
-          title: 'Unsplash',
-          description:
-              'Over 6 million free high-resolution photos and illustrations brought to you by the world’s most generous community of contributors.',
-          url: 'https://unsplash.com/',
         ),
       ],
     );

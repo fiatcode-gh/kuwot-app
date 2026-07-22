@@ -41,8 +41,6 @@ jobs:
           flutter build appbundle --release \
             --build-name="$BUILD_NAME" \
             --build-number="$BUILD_CODE" \
-            --dart-define=QUOTE_API_SCHEME="${{ vars.QUOTE_API_SCHEME }}" \
-            --dart-define=QUOTE_API_HOST="${{ vars.QUOTE_API_HOST }}" \
             --dart-define=SENTRY_DSN="${{ vars.SENTRY_DSN }}"
 
       - name: Upload AAB artifact
