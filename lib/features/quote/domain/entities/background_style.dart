@@ -1,16 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/painting.dart' show Color;
 
-enum BackgroundKind {
-  linearGradient,
-  radialGradient,
-  sweepGradient,
-  blobs,
-  waves,
-  lowPoly,
-  stripes,
-}
-
 class Palette extends Equatable {
   const Palette(this.colors);
 
@@ -21,16 +11,11 @@ class Palette extends Equatable {
 }
 
 class BackgroundStyle extends Equatable {
-  const BackgroundStyle({
-    required this.seed,
-    required this.kind,
-    required this.palette,
-  });
+  const BackgroundStyle({required this.seed, required this.palette});
 
   final int seed;
-  final BackgroundKind kind;
   final Palette palette;
 
   @override
-  List<Object?> get props => [seed, kind, palette];
+  List<Object?> get props => [seed, palette];
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kuwot/features/quote/domain/entities/background_style.dart';
+import 'package:kuwot/features/quote/domain/entities/palettes.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
 
 void main() {
@@ -17,8 +17,8 @@ void main() {
     expect(a.seed, isNot(b.seed));
   });
 
-  test('picks a kind and palette from the configured sets', () {
+  test('picks a palette from the configured set', () {
     final style = generator.generate(7, 3);
-    expect(BackgroundKind.values, contains(style.kind));
+    expect(kPalettes, contains(style.palette));
   });
 }

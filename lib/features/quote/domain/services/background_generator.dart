@@ -11,9 +11,7 @@ class BackgroundGenerator {
   BackgroundStyle generate(int quoteId, int variant) {
     final seed = Object.hash(quoteId, variant);
     final rng = Random(seed);
-    final kind =
-        BackgroundKind.values[rng.nextInt(BackgroundKind.values.length)];
     final palette = palettes[rng.nextInt(palettes.length)];
-    return BackgroundStyle(seed: seed, kind: kind, palette: palette);
+    return BackgroundStyle(seed: seed, palette: palette);
   }
 }
