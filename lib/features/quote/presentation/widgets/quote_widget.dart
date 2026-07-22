@@ -4,44 +4,15 @@ import 'package:flutter_svg/svg.dart';
 import 'package:kuwot/core/presentation/error_retry_snackbar.dart';
 import 'package:kuwot/features/quote/presentation/bloc/quote_bloc.dart';
 
-class QuoteWidget extends StatefulWidget {
+class QuoteWidget extends StatelessWidget {
   const QuoteWidget({super.key});
-
-  @override
-  State<QuoteWidget> createState() => _QuoteWidgetState();
-}
-
-class _QuoteWidgetState extends State<QuoteWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-
-  String? _quoteBody;
-  String? _quoteAuthor;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // init animation
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _animationController.addListener(() => setState(() {}));
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<QuoteBloc, QuoteState>(
+      // Surface fetch errors with a retry action.
+      listenWhen: (_, state) => state is QuoteErrorState,
       listener: (context, state) {
-        // animate quote loading state
-        if (state is QuoteLoadingState) {
-          _animationController.repeat(reverse: true);
-        } else {
-          _animationController.forward();
-        }
-
-        // handle error state
         if (state is QuoteErrorState) {
           ErrorRetrySnackbar.show(
             context,
@@ -52,11 +23,11 @@ class _QuoteWidgetState extends State<QuoteWidget>
           );
         }
       },
+      // Only repaint when a new quote is loaded, so the previous quote stays on
+      // screen during the (offline, near-instant) loading frame — no flicker.
+      buildWhen: (_, state) => state is QuoteLoadedState,
       builder: (context, state) {
-        if (state is QuoteLoadedState) {
-          _quoteBody = state.quote.body;
-          _quoteAuthor = state.quote.author;
-        }
+        final quote = state is QuoteLoadedState ? state.quote : null;
 
         return Container(
           decoration: BoxDecoration(
@@ -69,20 +40,17 @@ class _QuoteWidgetState extends State<QuoteWidget>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Opacity(
-                opacity: _animationController.value,
-                child: SvgPicture.asset(
-                  'assets/svgs/chat-quote-fill.svg',
-                  height: 54,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white54,
-                    BlendMode.srcIn,
-                  ),
+              SvgPicture.asset(
+                'assets/svgs/chat-quote-fill.svg',
+                height: 54,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white54,
+                  BlendMode.srcIn,
                 ),
               ),
               const SizedBox(height: 30),
               Text(
-                _quoteBody ?? '...',
+                quote?.body ?? '...',
                 style: Theme.of(
                   context,
                 ).textTheme.headlineSmall?.copyWith(color: Colors.white),
@@ -90,7 +58,7 @@ class _QuoteWidgetState extends State<QuoteWidget>
               ),
               const SizedBox(height: 30),
               Text(
-                '- ${_quoteAuthor ?? 'Kuwot'}',
+                '- ${quote?.author ?? 'Kuwot'}',
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(color: Colors.white),
@@ -101,11 +69,5 @@ class _QuoteWidgetState extends State<QuoteWidget>
         );
       },
     );
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 }
