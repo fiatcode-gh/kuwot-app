@@ -8,10 +8,16 @@ on:
 
 jobs:
   build-aab:
-    runs-on: flutter-android
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
@@ -20,20 +26,20 @@ jobs:
         run: dart run build_runner build
 
       - name: Decode signing keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "${{ forgejo.workspace }}/upload-keystore.jks"
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "${{ github.workspace }}/upload-keystore.jks"
 
       - name: Build signed AAB
         env:
-          KEYSTORE_PATH: ${{ forgejo.workspace }}/upload-keystore.jks
+          KEYSTORE_PATH: ${{ github.workspace }}/upload-keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           # Tag is the Flutter version string prefixed with v: v<name>+<code>, e.g. v1.2.29+29.
           # versionCode (the +N) must strictly increase and exceed what's live on Play.
-          VERSION="${FORGEJO_REF_NAME#v}"
+          VERSION="${GITHUB_REF_NAME#v}"
           if [ "$VERSION" = "${VERSION#*+}" ]; then
-            echo "::error::Tag '$FORGEJO_REF_NAME' must be v<name>+<code>, e.g. v1.2.29+29" && exit 1
+            echo "::error::Tag '$GITHUB_REF_NAME' must be v<name>+<code>, e.g. v1.2.29+29" && exit 1
           fi
           BUILD_NAME="${VERSION%%+*}"
           BUILD_CODE="${VERSION##*+}"
@@ -44,8 +50,8 @@ jobs:
             --dart-define=SENTRY_DSN="${{ vars.SENTRY_DSN }}"
 
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: kuwot-${{ forgejo.ref_name }}-aab
+          name: kuwot-${{ github.ref_name }}-aab
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
