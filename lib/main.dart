@@ -25,14 +25,14 @@ Future<void> main() async {
   // register bloc observer
   Bloc.observer = AppBlocObserver();
 
-  // sentry setup
+  // error reporting to the self-hosted Bugsink (Sentry-compatible)
   final sentryDsn = EnvImpl().sentryDsn;
   if (!kDebugMode && sentryDsn.isNotEmpty) {
     await SentryFlutter.init((options) {
-      options.dsn = sentryDsn;
-      options.tracesSampleRate = 1.0;
-      // ignore: experimental_member_use
-      options.profilesSampleRate = 1.0;
+      options
+        ..dsn = sentryDsn
+        // Bugsink only stores errors; sessions would be sent and dropped.
+        ..enableAutoSessionTracking = false;
     }, appRunner: () => runApp(KuwotApp()));
   } else {
     runApp(KuwotApp());
