@@ -39,15 +39,18 @@ class _DonationPageState extends State<DonationPage> {
             });
           }
         },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-              child: Text(_donationMessage),
-            ),
-            ..._buildProductList(),
-          ],
+        child: SafeArea(
+          top: false,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+                child: Text(_donationMessage),
+              ),
+              ..._buildProductList(),
+            ],
+          ),
         ),
       ),
     );
