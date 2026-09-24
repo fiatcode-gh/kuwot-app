@@ -51,17 +51,15 @@ class QuoteWidget extends StatelessWidget {
               const SizedBox(height: 30),
               Text(
                 quote?.body ?? '...',
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineSmall?.copyWith(color: Colors.white),
+                style: Theme.of(context).textTheme.headlineSmall
+                    ?.copyWith(color: Colors.white),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
               Text(
                 '- ${quote?.author ?? 'Kuwot'}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: Colors.white),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: Colors.white),
                 textAlign: TextAlign.right,
               ),
             ],

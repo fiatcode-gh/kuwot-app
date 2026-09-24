@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'quote.dart';
@@ -9,6 +9,7 @@ part of 'quote.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $QuoteCopyWith<Quote> get copyWith => _$QuoteCopyWithImpl<Quote>(this as Quote, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Quote&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body));
+  final _this = this as Quote;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Quote&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.author, _this.author) || other.author == _this.author)&&(identical(other.body, _this.body) || other.body == _this.body));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,author,body);
+int get hashCode {
+  final _this = this as Quote;
+  return Object.hash(runtimeType,_this.id,_this.author,_this.body);
+}
 
 @override
 String toString() {
-  return 'Quote(id: $id, author: $author, body: $body)';
+  final _this = this as Quote;
+  return 'Quote(id: ${_this.id}, author: ${_this.author}, body: ${_this.body})';
 }
 
 
@@ -63,7 +69,7 @@ class _$QuoteCopyWithImpl<$Res>
 /// Create a copy of Quote
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? author = null,Object? body = null,}) {
-  return _then(_self.copyWith(
+  return _then(Quote(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
 as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
@@ -225,16 +231,18 @@ _$QuoteCopyWith<_Quote> get copyWith => __$QuoteCopyWithImpl<_Quote>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Quote&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Quote&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,author,body);
+int get hashCode {
+    return Object.hash(runtimeType,id,author,body);
+}
 
 @override
 String toString() {
-  return 'Quote(id: $id, author: $author, body: $body)';
+    return 'Quote(id: $id, author: $author, body: $body)';
 }
 
 

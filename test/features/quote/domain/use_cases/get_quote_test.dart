@@ -20,9 +20,8 @@ void main() {
   test('should get quote', () async {
     // arrange
     const tQuote = Quote(id: 1, author: 'author', body: 'text');
-    when(
-      () => mockQuoteRepository.getQuote(),
-    ).thenAnswer((_) async => right(tQuote));
+    when(() => mockQuoteRepository.getQuote())
+        .thenAnswer((_) async => right(tQuote));
 
     // act
     final result = await useCase(const NoParams());

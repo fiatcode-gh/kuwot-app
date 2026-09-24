@@ -37,9 +37,8 @@ void main() {
   blocTest<QuoteBloc, QuoteState>(
     'emits [Loading, Error] on GetQuoteEvent failure',
     build: () {
-      when(
-        () => getQuote(any()),
-      ).thenAnswer((_) async => left(const UnknownFailure(message: 'boom')));
+      when(() => getQuote(any()))
+          .thenAnswer((_) async => left(const UnknownFailure(message: 'boom')));
       return QuoteBloc(getQuote: getQuote);
     },
     act: (bloc) => bloc.add(const GetQuoteEvent()),

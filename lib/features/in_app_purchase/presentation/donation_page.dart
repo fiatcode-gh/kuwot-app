@@ -76,9 +76,8 @@ class _DonationPageState extends State<DonationPage> {
                 const SizedBox(height: 8),
                 Text(
                   product.price,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),

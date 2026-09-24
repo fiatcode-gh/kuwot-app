@@ -37,9 +37,8 @@ void main() {
           clientVersionStalenessDays: 1,
           updatePriority: 1,
         );
-        when(
-          () => mockAppUpdater.checkForUpdate(),
-        ).thenAnswer((_) async => tAppUpdateInfo);
+        when(() => mockAppUpdater.checkForUpdate())
+            .thenAnswer((_) async => tAppUpdateInfo);
 
         // expect later
         final expected = [
@@ -69,9 +68,8 @@ void main() {
           clientVersionStalenessDays: 1,
           updatePriority: 1,
         );
-        when(
-          () => mockAppUpdater.checkForUpdate(),
-        ).thenAnswer((_) async => tAppUpdateInfo);
+        when(() => mockAppUpdater.checkForUpdate())
+            .thenAnswer((_) async => tAppUpdateInfo);
 
         // expect later
         final expected = [
