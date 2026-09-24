@@ -49,15 +49,18 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('App Settings')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          themeSetting,
-          const SizedBox(height: 20),
-          appVersion,
-          const SizedBox(height: 20),
-          const AboutWidget(),
-        ],
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            themeSetting,
+            const SizedBox(height: 20),
+            appVersion,
+            const SizedBox(height: 20),
+            const AboutWidget(),
+          ],
+        ),
       ),
     );
   }

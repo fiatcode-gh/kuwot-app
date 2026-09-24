@@ -15,15 +15,13 @@ class AboutWidget extends StatelessWidget {
         _buildCreditItem(
           context,
           title: 'Kuwot App Source',
-          description:
-              'Source code for this app. Any suggestions or contributions are welcome.',
+          description: 'Source code for this app. Any suggestions or contributions are welcome.',
           url: 'https://github.com/dhemasnurjaya/kuwot-app',
         ),
         _buildCreditItem(
           context,
           title: 'Quotes-500K',
-          description:
-              'This app ships a curated subset of the quotes dataset by Shivali Goel, Rishi Madhok, Shweta Garg. Initially created for "Proposing Contextually Relevant Quotes for Images" journal.',
+          description: 'This app ships a curated subset of the quotes dataset by Shivali Goel, Rishi Madhok, Shweta Garg. Initially created for "Proposing Contextually Relevant Quotes for Images" journal.',
           url: 'https://github.com/ShivaliGoel/Quotes-500K',
         ),
       ],

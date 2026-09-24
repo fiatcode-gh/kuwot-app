@@ -29,42 +29,45 @@ class QuoteWidget extends StatelessWidget {
       builder: (context, state) {
         final quote = state is QuoteLoadedState ? state.quote : null;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.all(16.0),
-          margin: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SvgPicture.asset(
-                'assets/svgs/chat-quote-fill.svg',
-                height: 54,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white54,
-                  BlendMode.srcIn,
-                ),
+        return ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 30),
-              Text(
-                quote?.body ?? '...',
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineSmall?.copyWith(color: Colors.white),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.all(16.0),
+              margin: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SvgPicture.asset(
+                    'assets/svgs/chat-quote-fill.svg',
+                    height: 54,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white54,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    quote?.body ?? '...',
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    '- ${quote?.author ?? 'Kuwot'}',
+                    style: Theme.of(context).textTheme.bodyLarge
+                        ?.copyWith(color: Colors.white),
+                    textAlign: TextAlign.right,
+                  ),
+                ],
               ),
-              const SizedBox(height: 30),
-              Text(
-                '- ${quote?.author ?? 'Kuwot'}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-                textAlign: TextAlign.right,
-              ),
-            ],
+            ),
           ),
         );
       },
