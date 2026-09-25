@@ -19,11 +19,13 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
-    final themeSetting = Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final themeSetting = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Theme', style: AppFonts.body(size: 16, color: palette.ink)),
+        const SizedBox(height: 8),
         SegmentedButton<ThemeMode>(
+          showSelectedIcon: false,
           segments: const [
             ButtonSegment(value: ThemeMode.system, label: Text('System')),
             ButtonSegment(value: ThemeMode.light, label: Text('Light')),

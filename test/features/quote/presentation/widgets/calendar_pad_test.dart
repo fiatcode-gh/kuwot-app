@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kuwot/features/quote/domain/entities/background_style.dart';
@@ -335,6 +336,39 @@ void main() {
 
       expect(find.text('Under quote').hitTestable(), findsOneWidget);
       expect(tester.getTopLeft(find.text('Under quote')).dy, restY);
+    },
+  );
+
+  testWidgets(
+    'the pad exposes a single semantics node describing only the top page: '
+    'no under content, no duplicated text, no scroll actions from the pan '
+    'detector',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      await pumpPad(
+        tester,
+        top: quoteTop,
+        under: quoteUnder,
+        tearKind: TearKind.quote,
+      );
+
+      final node = tester.getSemantics(find.byType(CalendarPad));
+      final data = node.getSemanticsData();
+
+      expect(data.label, contains('Top quote'));
+      expect(data.label, isNot(contains('Under quote')));
+      expect(node.childrenCount, 0);
+      expect(find.bySemanticsLabel(RegExp('Under quote')), findsNothing);
+      for (final action in [
+        SemanticsAction.scrollUp,
+        SemanticsAction.scrollDown,
+        SemanticsAction.scrollLeft,
+        SemanticsAction.scrollRight,
+      ]) {
+        expect(data.hasAction(action), isFalse);
+      }
+
+      semantics.dispose();
     },
   );
 }

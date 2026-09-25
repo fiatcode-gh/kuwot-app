@@ -88,6 +88,8 @@ class _DockButton extends StatelessWidget {
       enabled: enabled,
       button: true,
       label: label,
+      excludeSemantics: true,
+      onTap: onPressed,
       child: Opacity(
         opacity: enabled ? 1 : 0.38,
         child: InkWell(

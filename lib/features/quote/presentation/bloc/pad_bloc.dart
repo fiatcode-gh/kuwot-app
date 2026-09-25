@@ -112,7 +112,7 @@ class PadBloc extends Bloc<PadEvent, PadState> {
 
     final today = PadDay.from(time.now());
     var newTop = current.under;
-    if (newTop.day.isAfter(today)) {
+    if (current.tearKind == TearKind.page && newTop.day != today) {
       newTop = PadPage(day: today, quote: newTop.quote, header: _header(today));
     }
 
@@ -194,6 +194,24 @@ class PadBloc extends Bloc<PadEvent, PadState> {
     }
 
     if (current.tearKind == TearKind.quote && top.day.isBefore(today)) {
+      final underResult = await _drawUnder(top, TearKind.page, today);
+      if (underResult.isLeft()) {
+        _emitFailure(emit, underResult);
+        return;
+      }
+      final under = _rightValue(underResult);
+      emit(
+        PadReady(
+          top: top,
+          under: under,
+          tearKind: TearKind.page,
+          revision: ++_revision,
+        ),
+      );
+      return;
+    }
+
+    if (current.tearKind == TearKind.page && current.under.day != today) {
       final underResult = await _drawUnder(top, TearKind.page, today);
       if (underResult.isLeft()) {
         _emitFailure(emit, underResult);

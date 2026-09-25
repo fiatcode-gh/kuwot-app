@@ -94,6 +94,7 @@ class TearSheetState extends State<TearSheet>
   }
 
   void _onPanEnd(DragEndDetails details) {
+    if (_phase != _Phase.dragging) return;
     final vy = details.velocity.pixelsPerSecond.dy;
     if (_reducedMotion) {
       final torn = _rawDy >= _threshold || vy > _flingVelocity;

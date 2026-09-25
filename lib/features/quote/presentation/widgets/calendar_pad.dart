@@ -175,54 +175,59 @@ class CalendarPadState extends State<CalendarPad> {
       label:
           '${labels.weekday} ${labels.month} ${widget.top.day.day}. '
           '${widget.top.quote.body} — ${widget.top.quote.author}',
-      child: PadFrame(
-        page: widget.tearKind == TearKind.page
-            ? Stack(
-                fit: StackFit.expand,
-                children: [
-                  RepaintBoundary(
-                    child: PageFace(page: widget.under, locale: widget.locale),
-                  ),
-                  TearSheet(
-                    key: _sheetKey,
-                    teethSeed: widget.revision,
-                    onTornAway: widget.onTornAway,
-                    child: PageFace(page: widget.top, locale: widget.locale),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  Expanded(
-                    flex: kHeaderFlex,
-                    child: PageHeader(
-                      day: widget.top.day,
-                      style: widget.top.header,
-                      locale: widget.locale,
-                    ),
-                  ),
-                  const PerforationLine(),
-                  Expanded(
-                    flex: kQuoteFlex,
-                    child: ClipRect(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          RepaintBoundary(
-                            child: QuoteStrip(quote: widget.under.quote),
-                          ),
-                          TearSheet(
-                            key: _sheetKey,
-                            teethSeed: widget.revision,
-                            onTornAway: widget.onTornAway,
-                            child: QuoteStrip(quote: widget.top.quote),
-                          ),
-                        ],
+      child: ExcludeSemantics(
+        child: PadFrame(
+          page: widget.tearKind == TearKind.page
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    RepaintBoundary(
+                      child: PageFace(
+                        page: widget.under,
+                        locale: widget.locale,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    TearSheet(
+                      key: _sheetKey,
+                      teethSeed: widget.revision,
+                      onTornAway: widget.onTornAway,
+                      child: PageFace(page: widget.top, locale: widget.locale),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      flex: kHeaderFlex,
+                      child: PageHeader(
+                        day: widget.top.day,
+                        style: widget.top.header,
+                        locale: widget.locale,
+                      ),
+                    ),
+                    const PerforationLine(),
+                    Expanded(
+                      flex: kQuoteFlex,
+                      child: ClipRect(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            RepaintBoundary(
+                              child: QuoteStrip(quote: widget.under.quote),
+                            ),
+                            TearSheet(
+                              key: _sheetKey,
+                              teethSeed: widget.revision,
+                              onTornAway: widget.onTornAway,
+                              child: QuoteStrip(quote: widget.top.quote),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }

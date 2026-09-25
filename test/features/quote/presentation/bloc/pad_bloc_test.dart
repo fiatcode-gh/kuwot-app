@@ -446,6 +446,37 @@ void main() {
       expect(states, isEmpty);
       await bloc.close();
     });
+
+    test('a second midnight while a page tear is pending redraws under for '
+        'today; the tear lands on today, then quote tears follow', () async {
+      final time = FakeTime(DateTime(2026, 3, 10));
+      final bloc = await buildPadBloc(time: time);
+      bloc.add(const PadStarted());
+      await pumpEventQueue();
+
+      time.current = DateTime(2026, 3, 11);
+      bloc.add(const PadDayChecked());
+      await pumpEventQueue();
+      final firstCheck = bloc.state as PadReady;
+      expect(firstCheck.tearKind, TearKind.page);
+      expect(firstCheck.under.day, const PadDay(2026, 3, 11));
+
+      time.current = DateTime(2026, 3, 12);
+      bloc.add(const PadDayChecked());
+      await pumpEventQueue();
+      final secondCheck = bloc.state as PadReady;
+      expect(secondCheck.tearKind, TearKind.page);
+      expect(secondCheck.top.day, firstCheck.top.day);
+      expect(secondCheck.under.day, const PadDay(2026, 3, 12));
+
+      bloc.add(PadTearCommitted(secondCheck.revision));
+      await pumpEventQueue();
+      final afterTear = bloc.state as PadReady;
+      expect(afterTear.top.day, const PadDay(2026, 3, 12));
+      expect(afterTear.tearKind, TearKind.quote);
+
+      await bloc.close();
+    });
   });
 
   test(

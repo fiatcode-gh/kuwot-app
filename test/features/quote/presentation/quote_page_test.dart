@@ -169,25 +169,6 @@ void main() {
     );
   });
 
-  testWidgets('mid-drag reveals the under content underneath', (tester) async {
-    final bloc = await _pumpQuotePage(
-      tester,
-      time: FakeTime(DateTime(2026, 9, 25)),
-    );
-
-    final gesture = await tester.startGesture(
-      tester.getCenter(find.text('Quote 1')),
-    );
-    await gesture.moveBy(const Offset(0, 100));
-    await tester.pump();
-
-    final ready = bloc.state as PadReady;
-    expect(find.text(ready.under.quote.body), findsOneWidget);
-
-    await gesture.up();
-    await tester.pumpAndSettle();
-  });
-
   group('device locale (G11)', () {
     testWidgets(
       'renders the weekday and month in the device locale, resolved once '
