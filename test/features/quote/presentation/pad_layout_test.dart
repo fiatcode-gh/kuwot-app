@@ -129,4 +129,27 @@ void main() {
       );
     }
   });
+
+  group('tablet portrait fill (D7)', () {
+    testWidgets(
+      '800x1280: the space above the binding is at most 12dp plus the '
+      'safe-area top',
+      (tester) async {
+        await _pumpAt(
+          tester,
+          size: const Size(800, 1280),
+          theme: lightTheme,
+          quote: kLongestBodyQuote,
+        );
+
+        final bindingTop = tester
+            .getTopLeft(find.byKey(PadFrame.bindingKey))
+            .dy;
+        final safeAreaTop =
+            tester.view.padding.top / tester.view.devicePixelRatio;
+
+        expect(bindingTop, lessThanOrEqualTo(12 + safeAreaTop + 0.5));
+      },
+    );
+  });
 }

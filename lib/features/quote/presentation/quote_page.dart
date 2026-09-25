@@ -72,6 +72,8 @@ class _QuotePageState extends State<QuotePage> {
     final palette = AppPalette.of(context);
     final brightness = Theme.of(context).brightness;
     final isTablet = MediaQuery.sizeOf(context).shortestSide >= 600;
+    final isTabletLandscape =
+        isTablet && MediaQuery.orientationOf(context) == Orientation.landscape;
     final maxWidth = isTablet ? 560.0 : 420.0;
     final locale = View.of(context).platformDispatcher.locale;
 
@@ -90,7 +92,9 @@ class _QuotePageState extends State<QuotePage> {
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxWidth: maxWidth,
-                      maxHeight: isTablet ? maxWidth / 0.58 : double.infinity,
+                      maxHeight: isTabletLandscape
+                          ? maxWidth / 0.58
+                          : double.infinity,
                     ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
