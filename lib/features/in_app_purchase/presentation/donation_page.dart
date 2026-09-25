@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:kuwot/core/presentation/theme/app_fonts.dart';
+import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
 
 @RoutePage()
@@ -28,8 +30,10 @@ class _DonationPageState extends State<DonationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Coffee time?')),
+      backgroundColor: palette.desk,
+      appBar: AppBar(title: const Text('Tip jar')),
       body: BlocListener<InAppPurchaseBloc, InAppPurchaseState>(
         listener: (context, state) {
           if (state is ConsumableProductsLoadedState) {
@@ -46,9 +50,12 @@ class _DonationPageState extends State<DonationPage> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-                child: Text(_donationMessage),
+                child: Text(
+                  _donationMessage,
+                  style: AppFonts.quoteBody(size: 18, color: palette.ink),
+                ),
               ),
-              ..._buildProductList(),
+              ..._buildProductList(palette),
             ],
           ),
         ),
@@ -56,7 +63,7 @@ class _DonationPageState extends State<DonationPage> {
     );
   }
 
-  List<Widget> _buildProductList() {
+  List<Widget> _buildProductList(AppPalette palette) {
     return _products.map((product) {
       final title = product.title.replaceAll('(Kuwot)', '');
       final description = product.description.replaceAll(
@@ -74,13 +81,23 @@ class _DonationPageState extends State<DonationPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(title, style: Theme.of(context).textTheme.bodyLarge),
-                Text(description),
+                Text(
+                  title,
+                  style: AppFonts.body(
+                    size: 16,
+                    color: palette.ink,
+                    weight: 600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: AppFonts.body(size: 14, color: palette.inkMuted),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   product.price,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: AppFonts.label(size: 14, color: palette.ink),
                 ),
               ],
             ),
