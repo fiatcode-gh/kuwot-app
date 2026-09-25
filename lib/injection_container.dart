@@ -30,6 +30,7 @@ import 'package:kuwot/features/quote/domain/use_cases/get_quote_by_id.dart';
 import 'package:kuwot/features/quote/domain/use_cases/load_pad_snapshot.dart';
 import 'package:kuwot/features/quote/domain/use_cases/save_pad_snapshot.dart';
 import 'package:kuwot/features/quote/presentation/bloc/background_bloc.dart';
+import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
 import 'package:kuwot/features/quote/presentation/bloc/quote_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -113,6 +114,16 @@ void setup() {
   getIt.registerFactory<QuoteBloc>(() => QuoteBloc(getQuote: getIt()));
   getIt.registerFactory<BackgroundBloc>(
     () => BackgroundBloc(generator: getIt()),
+  );
+  getIt.registerFactory<PadBloc>(
+    () => PadBloc(
+      getQuote: getIt(),
+      getQuoteById: getIt(),
+      loadPadSnapshot: getIt(),
+      savePadSnapshot: getIt(),
+      generator: getIt(),
+      time: getIt(),
+    ),
   );
 
   // others
