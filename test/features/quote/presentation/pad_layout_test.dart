@@ -5,6 +5,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
 import 'package:kuwot/features/quote/presentation/quote_page.dart';
+import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
+import 'package:kuwot/features/quote/presentation/widgets/control_dock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/load_app_fonts.dart';
@@ -102,5 +104,29 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  group('dock spacing (D5)', () {
+    for (final sizeEntry in sizes.entries) {
+      testWidgets(
+        '${sizeEntry.key}: the gap between the lowest pad edge and the '
+        'dock separator is 20dp',
+        (tester) async {
+          await _pumpAt(
+            tester,
+            size: sizeEntry.value,
+            theme: lightTheme,
+            quote: kLongestBodyQuote,
+          );
+
+          final padBottom = tester
+              .getBottomLeft(find.byKey(PadFrame.edgeKeys[1]))
+              .dy;
+          final dockTop = tester.getTopLeft(find.byType(ControlDock)).dy;
+
+          expect(dockTop - padBottom, closeTo(20, 0.5));
+        },
+      );
+    }
   });
 }

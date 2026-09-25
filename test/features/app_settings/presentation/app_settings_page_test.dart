@@ -1,66 +1,48 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:kuwot/core/data/local/config.dart';
-import 'package:kuwot/core/error/failure.dart';
 import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/features/app_settings/presentation/app_settings_page.dart';
-import 'package:kuwot/features/in_app_purchase/domain/repositories/in_app_purchase_repository.dart';
-import 'package:kuwot/features/in_app_purchase/domain/use_case/get_consumable_products.dart';
-import 'package:kuwot/features/in_app_purchase/domain/use_case/purchase_consumable_product.dart';
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
-import 'package:kuwot/features/in_app_purchase/presentation/donation_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../helpers/load_app_fonts.dart';
+import '../../../helpers/settings_fakes.dart';
 
-class _FakeThemeModeConfig extends Config<ThemeMode> {
-  @override
-  Future<ThemeMode?> get() async => null;
+final _sampleProducts = [
+  ProductDetails(
+    id: 'small_coffee',
+    title: 'Small Coffee',
+    description: 'A small coffee tip',
+    price: r'$1.00',
+    rawPrice: 1.0,
+    currencyCode: 'USD',
+  ),
+];
 
-  @override
-  Future<void> set(ThemeMode value) async {}
-
-  @override
-  Future<void> remove() async {}
-}
-
-/// A no-op purchase repository: enough for [DonationPage] to build and
-/// settle its initial "load products" request without touching a platform
-/// channel.
-class _FakeInAppPurchaseRepository implements InAppPurchaseRepository {
-  @override
-  Stream<List<PurchaseDetails>> get purchaseStream => const Stream.empty();
-
-  @override
-  Future<Either<Failure, List<ProductDetails>>> getConsumableProducts() async =>
-      const Right([]);
-
-  @override
-  Future<Either<Failure, bool>> purchaseConsumableProduct(
-    ProductDetails product,
-  ) async => const Right(true);
-
-  @override
-  Future<Either<Failure, void>> completePurchase(
-    PurchaseDetails purchaseDetails,
-  ) async => const Right(null);
-}
-
-/// Pumps [AppSettingsPage] at 360x640 with a real [ThemeModeCubit] and
-/// [textScale], and waits for the first load to settle.
+/// Pumps [AppSettingsPage] at 360x640 with a real [ThemeModeCubit] and a
+/// mocked [InAppPurchaseBloc] fixed at [purchaseState], and waits for the
+/// first load to settle.
 Future<void> _pumpSettings(
   WidgetTester tester, {
   required ThemeData theme,
+  required InAppPurchaseState purchaseState,
   double textScale = 1.0,
 }) async {
   tester.view.physicalSize = const Size(360, 640);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
+
+  final purchaseBloc = MockInAppPurchaseBloc();
+  whenListen(
+    purchaseBloc,
+    const Stream<InAppPurchaseState>.empty(),
+    initialState: purchaseState,
+  );
 
   await tester.pumpWidget(
     MaterialApp(
@@ -70,41 +52,21 @@ Future<void> _pumpSettings(
           final mediaQuery = MediaQuery.of(context);
           return MediaQuery(
             data: mediaQuery.copyWith(textScaler: TextScaler.linear(textScale)),
-            child: BlocProvider(
-              create: (_) => ThemeModeCubit(
-                themeModeConfig: _FakeThemeModeConfig(),
-                initialThemeMode: ThemeMode.system,
-              ),
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<ThemeModeCubit>(
+                  create: (_) => ThemeModeCubit(
+                    themeModeConfig: FakeThemeModeConfig(),
+                    initialThemeMode: ThemeMode.system,
+                  ),
+                ),
+                BlocProvider<InAppPurchaseBloc>.value(value: purchaseBloc),
+              ],
               child: const AppSettingsPage(),
             ),
           );
         },
       ),
-    ),
-  );
-  await tester.pumpAndSettle();
-}
-
-/// Pumps [DonationPage] (the tip jar) at 360x640 with a no-op purchase bloc.
-Future<void> _pumpTipJar(
-  WidgetTester tester, {
-  required ThemeData theme,
-}) async {
-  tester.view.physicalSize = const Size(360, 640);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
-
-  final repo = _FakeInAppPurchaseRepository();
-  final bloc = InAppPurchaseBloc(
-    getConsumableProducts: GetConsumableProducts(repo),
-    purchaseConsumableProduct: PurchaseConsumableProduct(repo),
-  );
-
-  await tester.pumpWidget(
-    MaterialApp(
-      theme: theme,
-      home: BlocProvider.value(value: bloc, child: const DonationPage()),
     ),
   );
   await tester.pumpAndSettle();
@@ -134,6 +96,22 @@ void main() {
             tester,
             theme: themeEntry.value,
             textScale: scale,
+            purchaseState: const ConsumableProductsLoadedState([]),
+          );
+
+          expect(tester.takeException(), isNull);
+        },
+      );
+
+      testWidgets(
+        'the Tip jar section with products at 360x640, ${themeEntry.key} '
+        'theme, ${scale}x text scale does not overflow',
+        (tester) async {
+          await _pumpSettings(
+            tester,
+            theme: themeEntry.value,
+            textScale: scale,
+            purchaseState: ConsumableProductsLoadedState(_sampleProducts),
           );
 
           expect(tester.takeException(), isNull);
@@ -141,11 +119,61 @@ void main() {
       );
     }
 
-    testWidgets('the tip jar page at 360x640, ${themeEntry.key} theme does not '
-        'overflow', (tester) async {
-      await _pumpTipJar(tester, theme: themeEntry.value);
+    testWidgets(
+      'the Tip jar section empty state at 360x640, ${themeEntry.key} theme '
+      'does not overflow',
+      (tester) async {
+        await _pumpSettings(
+          tester,
+          theme: themeEntry.value,
+          purchaseState: const ConsumableProductsLoadedState([]),
+        );
 
-      expect(tester.takeException(), isNull);
-    });
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'the Tip jar section error state at 360x640, ${themeEntry.key} theme '
+      'does not overflow',
+      (tester) async {
+        await _pumpSettings(
+          tester,
+          theme: themeEntry.value,
+          purchaseState: const PurchaseErrorState(message: 'boom'),
+        );
+
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
+
+  testWidgets('the Tip jar section renders the products from a mocked '
+      'InAppPurchaseBloc state', (tester) async {
+    await _pumpSettings(
+      tester,
+      theme: lightTheme,
+      purchaseState: ConsumableProductsLoadedState(_sampleProducts),
+    );
+
+    expect(find.text('Small Coffee'), findsOneWidget);
+    expect(find.text(r'$1.00'), findsOneWidget);
+  });
+
+  testWidgets('sections appear in order: Theme, Tip jar, About', (
+    tester,
+  ) async {
+    await _pumpSettings(
+      tester,
+      theme: lightTheme,
+      purchaseState: const ConsumableProductsLoadedState([]),
+    );
+
+    final themeY = tester.getTopLeft(find.text('Theme')).dy;
+    final tipJarY = tester.getTopLeft(find.text('Tip jar')).dy;
+    final aboutY = tester.getTopLeft(find.text('Links & Credits')).dy;
+
+    expect(themeY, lessThan(tipJarY));
+    expect(tipJarY, lessThan(aboutY));
+  });
 }

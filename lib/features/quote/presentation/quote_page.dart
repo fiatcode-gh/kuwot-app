@@ -11,7 +11,6 @@ import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
 import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
 import 'package:kuwot/features/quote/presentation/widgets/control_dock.dart';
-import 'package:kuwot/features/quote/presentation/widgets/pad_top_bar.dart';
 import 'package:kuwot/features/quote/presentation/widgets/share_page_card.dart';
 import 'package:kuwot/utilities.dart';
 import 'package:share_plus/share_plus.dart';
@@ -85,19 +84,16 @@ class _QuotePageState extends State<QuotePage> {
         body: SafeArea(
           child: Column(
             children: [
-              PadTopBar(
-                onTipJar: () => context.router.push(const DonationRoute()),
-                onSettings: () => context.router.push(const AppSettingsRoute()),
-              ),
               Expanded(
-                child: Center(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxWidth: maxWidth,
                       maxHeight: isTablet ? maxWidth / 0.58 : double.infinity,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                       child: BlocConsumer<PadBloc, PadState>(
                         listener: (context, state) {
                           if (state is PadFailed) {
@@ -146,6 +142,8 @@ class _QuotePageState extends State<QuotePage> {
                       onShare: ready == null || _sharing
                           ? null
                           : () => _share(ready.top, locale),
+                      onSettings: () =>
+                          context.router.push(const AppSettingsRoute()),
                     );
                   },
                 ),

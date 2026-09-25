@@ -1,7 +1,13 @@
+import 'package:auto_route/auto_route.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
+import 'package:kuwot/core/presentation/theme/app_theme.dart';
+import 'package:kuwot/core/router/app_router.gr.dart';
+import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
 import 'package:kuwot/features/quote/presentation/quote_page.dart';
@@ -10,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../helpers/load_app_fonts.dart';
 import '../../../helpers/pad_fakes.dart';
 import '../../../helpers/pad_test_app.dart';
+import '../../../helpers/settings_fakes.dart';
 
 const _staleQuoteId = 100;
 const _staleQuote = Quote(
@@ -38,6 +45,62 @@ Future<PadBloc> _pumpQuotePage(
   );
   await tester.pumpAndSettle();
   return bloc;
+}
+
+class _TestHomeRoute extends PageRouteInfo<void> {
+  const _TestHomeRoute({List<PageRouteInfo>? children})
+    : super(_TestHomeRoute.name, initialChildren: children);
+
+  static const String name = 'TestHomeRoute';
+
+  static PageInfo page = PageInfo(name, builder: (data) => const QuotePage());
+}
+
+class _TestAppRouter extends RootStackRouter {
+  @override
+  List<AutoRoute> get routes => [
+    AutoRoute(page: _TestHomeRoute.page, initial: true),
+    AutoRoute(page: AppSettingsRoute.page),
+  ];
+}
+
+/// Pumps the real [QuotePage] behind a real (generated) route stack, so
+/// tapping Settings drives an actual [StackRouter] push to
+/// [AppSettingsRoute] rather than a stand-in.
+Future<_TestAppRouter> _pumpQuotePageWithRouter(
+  WidgetTester tester, {
+  required FakeTime time,
+}) async {
+  SharedPreferences.setMockInitialValues({});
+  final bloc = await buildPadBloc(time: time);
+  final purchaseBloc = MockInAppPurchaseBloc();
+  whenListen(
+    purchaseBloc,
+    const Stream<InAppPurchaseState>.empty(),
+    initialState: const ConsumableProductsLoadedState([]),
+  );
+  final router = _TestAppRouter();
+
+  await tester.pumpWidget(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<PadBloc>.value(value: bloc),
+        BlocProvider<ThemeModeCubit>(
+          create: (_) => ThemeModeCubit(
+            themeModeConfig: FakeThemeModeConfig(),
+            initialThemeMode: ThemeMode.system,
+          ),
+        ),
+        BlocProvider<InAppPurchaseBloc>.value(value: purchaseBloc),
+      ],
+      child: MaterialApp.router(
+        theme: lightTheme,
+        routerConfig: router.config(),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return router;
 }
 
 void main() {
@@ -184,5 +247,27 @@ void main() {
         expect(find.text('SEPTEMBER'), findsOneWidget);
       },
     );
+  });
+
+  group('dock Settings (D3)', () {
+    testWidgets('tapping Settings pushes AppSettingsRoute', (tester) async {
+      final router = await _pumpQuotePageWithRouter(
+        tester,
+        time: FakeTime(DateTime(2026, 9, 25)),
+      );
+
+      await tester.tap(find.text('SETTINGS'));
+      await tester.pumpAndSettle();
+
+      expect(router.current.name, AppSettingsRoute.name);
+    });
+
+    testWidgets('there is no tip-jar or settings icon above the pad', (
+      tester,
+    ) async {
+      await _pumpQuotePage(tester, time: FakeTime(DateTime(2026, 9, 25)));
+
+      expect(find.byType(IconButton), findsNothing);
+    });
   });
 }

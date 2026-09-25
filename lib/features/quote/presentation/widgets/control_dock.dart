@@ -5,10 +5,10 @@ import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 
 /// The pad's own toolbar: tear off the current page or quote, restyle the
-/// header, share. The tear button always runs the pad's current [tearKind],
-/// so it can never disagree with a completed drag gesture (contract G9). A
-/// `null` callback disables its button: dimmed, no ink response, and marked
-/// unavailable to assistive technology.
+/// header, share, and open Settings. The tear button always runs the pad's
+/// current [tearKind], so it can never disagree with a completed drag
+/// gesture (contract G9). A `null` callback disables its button: dimmed, no
+/// ink response, and marked unavailable to assistive technology.
 class ControlDock extends StatelessWidget {
   const ControlDock({
     super.key,
@@ -16,12 +16,14 @@ class ControlDock extends StatelessWidget {
     required this.onTear,
     required this.onRestyle,
     required this.onShare,
+    required this.onSettings,
   });
 
   final TearKind? tearKind;
   final VoidCallback? onTear;
   final VoidCallback? onRestyle;
   final VoidCallback? onShare;
+  final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +63,15 @@ class ControlDock extends StatelessWidget {
                 onPressed: onShare,
               ),
             ),
+            Expanded(
+              child: _DockButton(
+                icon: FontAwesomeIcons.sliders,
+                label: 'Settings',
+                palette: palette,
+                onPressed: onSettings,
+                tooltip: 'Settings',
+              ),
+            ),
           ],
         ),
       ),
@@ -74,17 +85,19 @@ class _DockButton extends StatelessWidget {
     required this.label,
     required this.palette,
     required this.onPressed,
+    this.tooltip,
   });
 
   final FaIconData icon;
   final String label;
   final AppPalette palette;
   final VoidCallback? onPressed;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
-    return Semantics(
+    final button = Semantics(
       enabled: enabled,
       button: true,
       label: label,
@@ -120,6 +133,14 @@ class _DockButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    final tooltipMessage = tooltip;
+    if (tooltipMessage == null) return button;
+    return Tooltip(
+      message: tooltipMessage,
+      excludeFromSemantics: true,
+      child: button,
     );
   }
 }

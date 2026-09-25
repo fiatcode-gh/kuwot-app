@@ -1,4 +1,3 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -6,15 +5,18 @@ import 'package:kuwot/core/presentation/theme/app_fonts.dart';
 import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
 
-@RoutePage()
-class DonationPage extends StatefulWidget {
-  const DonationPage({super.key});
+/// The Settings page's tip jar section: the donation message and the
+/// purchasable product list, sourced from [InAppPurchaseBloc]. Dispatches
+/// the same load event the old standalone tip-jar page dispatched, once,
+/// when the section first mounts (i.e. when Settings opens).
+class TipJarSection extends StatefulWidget {
+  const TipJarSection({super.key});
 
   @override
-  State<DonationPage> createState() => _DonationPageState();
+  State<TipJarSection> createState() => _TipJarSectionState();
 }
 
-class _DonationPageState extends State<DonationPage> {
+class _TipJarSectionState extends State<TipJarSection> {
   final _donationMessage =
       'I built this app with love and coffee. If you find it useful, please consider buying me a coffee. Your donation will help me keep the app running and updated. Thank you! ☕';
 
@@ -23,42 +25,38 @@ class _DonationPageState extends State<DonationPage> {
   @override
   void initState() {
     super.initState();
-
-    // get consumable products
-    context.read<InAppPurchaseBloc>().add(const GetConsumableProductsEvent());
+    final bloc = context.read<InAppPurchaseBloc>();
+    final currentState = bloc.state;
+    if (currentState is ConsumableProductsLoadedState) {
+      _products.addAll(currentState.products);
+    }
+    bloc.add(const GetConsumableProductsEvent());
   }
 
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
-    return Scaffold(
-      backgroundColor: palette.desk,
-      appBar: AppBar(title: const Text('Tip jar')),
-      body: BlocListener<InAppPurchaseBloc, InAppPurchaseState>(
-        listener: (context, state) {
-          if (state is ConsumableProductsLoadedState) {
-            setState(() {
-              _products.clear();
-              _products.addAll(state.products);
-            });
-          }
-        },
-        child: SafeArea(
-          top: false,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-                child: Text(
-                  _donationMessage,
-                  style: AppFonts.quoteBody(size: 18, color: palette.ink),
-                ),
-              ),
-              ..._buildProductList(palette),
-            ],
+    return BlocListener<InAppPurchaseBloc, InAppPurchaseState>(
+      listener: (context, state) {
+        if (state is ConsumableProductsLoadedState) {
+          setState(() {
+            _products.clear();
+            _products.addAll(state.products);
+          });
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Tip jar', style: AppFonts.body(size: 16, color: palette.ink)),
+          const SizedBox(height: 8),
+          Text(
+            _donationMessage,
+            style: AppFonts.quoteBody(size: 18, color: palette.ink),
           ),
-        ),
+          const SizedBox(height: 16),
+          ..._buildProductList(palette),
+        ],
       ),
     );
   }
