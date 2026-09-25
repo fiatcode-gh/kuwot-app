@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -185,5 +186,22 @@ void main() {
 
     await gesture.up();
     await tester.pumpAndSettle();
+  });
+
+  group('device locale (G11)', () {
+    testWidgets(
+      'renders the weekday and month in the device locale, resolved once '
+      'in QuotePage and threaded down rather than read from context '
+      'inside PageHeader',
+      (tester) async {
+        tester.platformDispatcher.localeTestValue = const Locale('id', 'ID');
+        addTearDown(tester.platformDispatcher.clearLocaleTestValue);
+
+        await _pumpQuotePage(tester, time: FakeTime(DateTime(2026, 9, 25)));
+
+        expect(find.text('JUMAT'), findsOneWidget);
+        expect(find.text('SEPTEMBER'), findsOneWidget);
+      },
+    );
   });
 }

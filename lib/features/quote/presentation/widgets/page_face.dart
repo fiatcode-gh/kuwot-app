@@ -13,9 +13,10 @@ const kQuoteFlex = 13;
 /// perforation, then the quote and author. Used both for the on-screen top
 /// page and, at a fixed size, for [SharePageCard].
 class PageFace extends StatelessWidget {
-  const PageFace({super.key, required this.page});
+  const PageFace({super.key, required this.page, required this.locale});
 
   final PadPage page;
+  final Locale locale;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +24,7 @@ class PageFace extends StatelessWidget {
       children: [
         Expanded(
           flex: kHeaderFlex,
-          child: PageHeader(day: page.day, style: page.header),
+          child: PageHeader(day: page.day, style: page.header, locale: locale),
         ),
         const PerforationLine(),
         Expanded(

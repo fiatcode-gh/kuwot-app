@@ -59,6 +59,7 @@ void main() {
           tearKind: tearKind,
           revision: revision,
           onTornAway: () => tornCount.value++,
+          locale: const Locale('en', 'US'),
         ),
         disableAnimations: disableAnimations,
       ),
@@ -327,6 +328,7 @@ void main() {
             tearKind: TearKind.quote,
             revision: 1,
             onTornAway: () => tornCount.value++,
+            locale: const Locale('en', 'US'),
           ),
         ),
       );

@@ -2,14 +2,19 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kuwot/core/error/reporter.dart';
 import 'package:kuwot/core/presentation/error_retry_snackbar.dart';
 import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:kuwot/core/router/app_router.gr.dart';
+import 'package:kuwot/features/quote/domain/entities/pad_page.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
 import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
 import 'package:kuwot/features/quote/presentation/widgets/control_dock.dart';
 import 'package:kuwot/features/quote/presentation/widgets/pad_top_bar.dart';
+import 'package:kuwot/features/quote/presentation/widgets/share_page_card.dart';
+import 'package:kuwot/utilities.dart';
+import 'package:share_plus/share_plus.dart';
 
 @RoutePage()
 class QuotePage extends StatefulWidget {
@@ -23,6 +28,7 @@ class _QuotePageState extends State<QuotePage> {
   final _padKey = GlobalKey<CalendarPadState>();
   late final PadBloc _bloc;
   late final AppLifecycleListener _lifecycle;
+  var _sharing = false;
 
   @override
   void initState() {
@@ -39,12 +45,36 @@ class _QuotePageState extends State<QuotePage> {
     super.dispose();
   }
 
+  Future<void> _share(PadPage page, Locale locale) async {
+    setState(() => _sharing = true);
+    try {
+      final bytes = await renderSharePage(context, page, locale: locale);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile.fromData(
+              bytes,
+              mimeType: 'image/png',
+              name: 'kuwot_${page.day.toIso()}_${page.quote.id}.png',
+            ),
+          ],
+        ),
+      );
+    } on Object catch (e, st) {
+      reportError(error: e, stackTrace: st);
+      showSnackBar('Could not create the share image.');
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final brightness = Theme.of(context).brightness;
     final isTablet = MediaQuery.sizeOf(context).shortestSide >= 600;
     final maxWidth = isTablet ? 560.0 : 420.0;
+    final locale = View.of(context).platformDispatcher.locale;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: brightness == Brightness.dark
@@ -88,6 +118,7 @@ class _QuotePageState extends State<QuotePage> {
                               revision: state.revision,
                               onTornAway: () =>
                                   _bloc.add(PadTearCommitted(state.revision)),
+                              locale: locale,
                             );
                           }
                           return PadFrame(
@@ -112,7 +143,9 @@ class _QuotePageState extends State<QuotePage> {
                       onRestyle: ready?.tearKind == TearKind.quote
                           ? () => _bloc.add(const PadRestyled())
                           : null,
-                      onShare: null,
+                      onShare: ready == null || _sharing
+                          ? null
+                          : () => _share(ready.top, locale),
                     );
                   },
                 ),

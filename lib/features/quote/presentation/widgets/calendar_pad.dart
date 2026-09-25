@@ -132,6 +132,7 @@ class CalendarPad extends StatefulWidget {
     required this.tearKind,
     required this.revision,
     required this.onTornAway,
+    required this.locale,
   });
 
   final PadPage top;
@@ -143,6 +144,7 @@ class CalendarPad extends StatefulWidget {
   final int revision;
 
   final VoidCallback onTornAway;
+  final Locale locale;
 
   @override
   State<CalendarPad> createState() => CalendarPadState();
@@ -167,7 +169,7 @@ class CalendarPadState extends State<CalendarPad> {
 
   @override
   Widget build(BuildContext context) {
-    final labels = padDateLabels(context, widget.top.day);
+    final labels = padDateLabels(widget.locale, widget.top.day);
     return Semantics(
       container: true,
       label:
@@ -178,12 +180,14 @@ class CalendarPadState extends State<CalendarPad> {
             ? Stack(
                 fit: StackFit.expand,
                 children: [
-                  RepaintBoundary(child: PageFace(page: widget.under)),
+                  RepaintBoundary(
+                    child: PageFace(page: widget.under, locale: widget.locale),
+                  ),
                   TearSheet(
                     key: _sheetKey,
                     teethSeed: widget.revision,
                     onTornAway: widget.onTornAway,
-                    child: PageFace(page: widget.top),
+                    child: PageFace(page: widget.top, locale: widget.locale),
                   ),
                 ],
               )
@@ -194,6 +198,7 @@ class CalendarPadState extends State<CalendarPad> {
                     child: PageHeader(
                       day: widget.top.day,
                       style: widget.top.header,
+                      locale: widget.locale,
                     ),
                   ),
                   const PerforationLine(),

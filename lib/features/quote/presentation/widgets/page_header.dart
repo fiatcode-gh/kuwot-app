@@ -7,16 +7,15 @@ import 'package:kuwot/features/quote/domain/entities/pad_day.dart';
 import 'package:kuwot/features/quote/presentation/widgets/background_painter.dart';
 
 /// The weekday and month labels for [day], formatted in the **device**
-/// locale (`View.of(context).platformDispatcher.locale`), not the app's
-/// [Localizations] locale — the app ships no localization delegates, so
-/// [Localizations] would always resolve to `en_US` regardless of the
-/// device's actual setting (contract G11). Falls back to the bare language
-/// code, then to `en`, if `intl` has no data for the full locale tag.
-({String weekday, String month}) padDateLabels(
-  BuildContext context,
-  PadDay day,
-) {
-  final locale = View.of(context).platformDispatcher.locale;
+/// locale [locale] (contract G11). The caller resolves that locale via
+/// `View.of(context).platformDispatcher.locale` where a real `View`
+/// ancestor exists (`QuotePage`), rather than this function calling
+/// `View.of` itself: [PageHeader] also renders inside [SharePageCard]'s
+/// off-screen `captureFromWidget` tree, which has no `View` ancestor at
+/// all, so a `View.of` call anywhere below that boundary always throws.
+/// Falls back to the bare language code, then to `en`, if `intl` has no
+/// data for the full locale tag.
+({String weekday, String month}) padDateLabels(Locale locale, PadDay day) {
   final tag = Intl.canonicalizedLocale(locale.toLanguageTag());
   final String resolved;
   if (DateFormat.localeExists(tag)) {
@@ -43,14 +42,20 @@ import 'package:kuwot/features/quote/presentation/widgets/background_painter.dar
 /// labels must never overflow, even at a large text scale factor, so they
 /// scale down together instead.
 class PageHeader extends StatelessWidget {
-  const PageHeader({super.key, required this.day, required this.style});
+  const PageHeader({
+    super.key,
+    required this.day,
+    required this.style,
+    required this.locale,
+  });
 
   final PadDay day;
   final BackgroundStyle style;
+  final Locale locale;
 
   @override
   Widget build(BuildContext context) {
-    final labels = padDateLabels(context, day);
+    final labels = padDateLabels(locale, day);
     return LayoutBuilder(
       builder: (context, constraints) {
         final numeralSize = (constraints.maxWidth * 0.34).clamp(64.0, 132.0);

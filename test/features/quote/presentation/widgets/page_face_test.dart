@@ -32,20 +32,22 @@ void main() {
     testWidgets('reads the weekday and month from the device locale', (
       tester,
     ) async {
-      tester.platformDispatcher.localeTestValue = const Locale('id', 'ID');
-      addTearDown(tester.platformDispatcher.clearLocaleTestValue);
-
-      await tester.pumpWidget(padTestApp(PageHeader(day: _day, style: style)));
+      await tester.pumpWidget(
+        padTestApp(
+          PageHeader(day: _day, style: style, locale: const Locale('id', 'ID')),
+        ),
+      );
 
       expect(find.text('JUMAT'), findsOneWidget);
       expect(find.text('SEPTEMBER'), findsOneWidget);
     });
 
     testWidgets('reads English labels for en_US', (tester) async {
-      tester.platformDispatcher.localeTestValue = const Locale('en', 'US');
-      addTearDown(tester.platformDispatcher.clearLocaleTestValue);
-
-      await tester.pumpWidget(padTestApp(PageHeader(day: _day, style: style)));
+      await tester.pumpWidget(
+        padTestApp(
+          PageHeader(day: _day, style: style, locale: const Locale('en', 'US')),
+        ),
+      );
 
       expect(find.text('FRIDAY'), findsOneWidget);
     });
@@ -60,7 +62,11 @@ void main() {
           SizedBox(
             width: 320,
             height: 140,
-            child: PageHeader(day: _day, style: style),
+            child: PageHeader(
+              day: _day,
+              style: style,
+              locale: const Locale('en', 'US'),
+            ),
           ),
           textScale: 2.0,
         ),
@@ -112,7 +118,12 @@ void main() {
 
             await tester.pumpWidget(
               padTestApp(
-                Center(child: SharePageCard(page: page)),
+                Center(
+                  child: SharePageCard(
+                    page: page,
+                    locale: const Locale('en', 'US'),
+                  ),
+                ),
                 theme: themeEntry.value,
                 textScale: 2.0,
               ),
@@ -205,7 +216,14 @@ void main() {
           final page = PadPage(day: _day, quote: quote, header: style);
           await expectMeasurementPinsRender(
             tester,
-            padTestApp(Center(child: SharePageCard(page: page))),
+            padTestApp(
+              Center(
+                child: SharePageCard(
+                  page: page,
+                  locale: const Locale('en', 'US'),
+                ),
+              ),
+            ),
             quote,
           );
         });
@@ -215,7 +233,11 @@ void main() {
           await expectMeasurementPinsRender(
             tester,
             padTestApp(
-              SizedBox(width: 360, height: 640, child: PageFace(page: page)),
+              SizedBox(
+                width: 360,
+                height: 640,
+                child: PageFace(page: page, locale: const Locale('en', 'US')),
+              ),
             ),
             quote,
           );
@@ -226,7 +248,11 @@ void main() {
           await expectMeasurementPinsRender(
             tester,
             padTestApp(
-              SizedBox(width: 412, height: 915, child: PageFace(page: page)),
+              SizedBox(
+                width: 412,
+                height: 915,
+                child: PageFace(page: page, locale: const Locale('en', 'US')),
+              ),
             ),
             quote,
           );
