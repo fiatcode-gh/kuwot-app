@@ -20,4 +20,16 @@ class QuoteRepositoryImpl implements QuoteRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, Quote>> getQuoteById(int id) async {
+    try {
+      final model = await localDataSource.getQuoteById(id);
+      return right(Quote.fromModel(model));
+    } on Object catch (e) {
+      return left(
+        UnknownFailure(message: e.toString(), cause: e is Exception ? e : null),
+      );
+    }
+  }
 }

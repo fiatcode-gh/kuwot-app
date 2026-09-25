@@ -40,6 +40,33 @@ void main() {
     }
   });
 
+  test('getQuoteById(1) returns the quote at that index', () async {
+    // arrange
+    final ds = QuoteLocalDataSourceImpl(
+      bundle: _FakeBundle(json),
+      random: Random(0),
+    );
+
+    // act
+    final quote = await ds.getQuoteById(1);
+
+    // assert
+    expect(quote.id, 1);
+    expect(quote.text, 'Beta quote');
+    expect(quote.author, 'B');
+  });
+
+  test('getQuoteById throws RangeError when the id is out of range', () async {
+    // arrange
+    final ds = QuoteLocalDataSourceImpl(
+      bundle: _FakeBundle(json),
+      random: Random(0),
+    );
+
+    // act & assert
+    expect(() => ds.getQuoteById(5), throwsA(isA<RangeError>()));
+  });
+
   test('parses the asset only once across calls', () async {
     // arrange
     final bundle = _CountingBundle(json);

@@ -4,4 +4,5 @@ import 'package:kuwot/features/quote/domain/entities/quote.dart';
 
 abstract class QuoteRepository {
   Future<Either<Failure, Quote>> getQuote();
+  Future<Either<Failure, Quote>> getQuoteById(int id);
 }
