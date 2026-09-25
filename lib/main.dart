@@ -47,6 +47,10 @@ Future<void> main() async {
 Future<void> setPortraitMode() async {
   if (kIsWeb) return;
 
+  final view = WidgetsBinding.instance.platformDispatcher.views.first;
+  final shortestSide = (view.physicalSize / view.devicePixelRatio).shortestSide;
+  if (shortestSide >= 600) return; // tablet: all orientations
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

@@ -59,6 +59,7 @@ void main() {
     '360x640': Size(360, 640),
     '411x914': Size(411, 914),
     '800x1280': Size(800, 1280),
+    '1280x800': Size(1280, 800),
   };
   final themes = {'light': lightTheme, 'dark': darkTheme};
   const quotes = {
