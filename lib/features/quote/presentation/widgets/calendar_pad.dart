@@ -11,9 +11,12 @@ import 'package:kuwot/features/quote/presentation/widgets/tear_sheet.dart';
 /// The pad's frame: binding bar, two faint stacked-page edges, and the
 /// current page slot. The binding, current page and both edge sheets share
 /// exactly the same left and right, and the page starts at the binding's
-/// bottom — no overlap, no per-page inset, no rotation, square corners
-/// everywhere (contract G5). The two under-sheets show only as a 4dp and an
-/// 8dp bottom edge below the page.
+/// bottom — no overlap, no per-page inset, no rotation. One 6dp radius
+/// ([PadFrame.cornerRadius]) rounds the binding's top corners, the page's
+/// bottom corners and both edge sheets' bottom corners; every other corner
+/// stays square, in particular where the page meets the binding (contract
+/// G5, D6). The two under-sheets show only as a 4dp and an 8dp bottom edge
+/// below the page.
 class PadFrame extends StatelessWidget {
   const PadFrame({super.key, required this.page});
 
@@ -21,6 +24,7 @@ class PadFrame extends StatelessWidget {
 
   static const bindingHeight = 34.0;
   static const edgeStep = 4.0;
+  static const cornerRadius = 6.0;
 
   static const bindingKey = Key('pad.binding');
   static const pageKey = Key('pad.page');
@@ -31,6 +35,7 @@ class PadFrame extends StatelessWidget {
     final palette = AppPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(cornerRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.16),
@@ -85,6 +90,10 @@ class PadFrame extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         border: Border(bottom: BorderSide(color: divider, width: 1)),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(cornerRadius),
+          bottomRight: Radius.circular(cornerRadius),
+        ),
       ),
     );
   }
@@ -92,6 +101,10 @@ class PadFrame extends StatelessWidget {
   Widget _bindingBar(AppPalette palette) {
     return DecoratedBox(
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(cornerRadius),
+          topRight: Radius.circular(cornerRadius),
+        ),
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,

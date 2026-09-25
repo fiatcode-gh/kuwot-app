@@ -11,6 +11,7 @@ import 'package:kuwot/features/quote/domain/entities/palettes.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
+import 'package:kuwot/features/quote/presentation/widgets/torn_edge_clipper.dart';
 
 import '../../../../helpers/load_app_fonts.dart';
 import '../../../../helpers/pad_test_app.dart';
@@ -371,4 +372,95 @@ void main() {
       semantics.dispose();
     },
   );
+
+  group('rounded pad corners (D6)', () {
+    const size = Size(300, 400);
+    final restingTeeth = List<double>.filled(6, 0.0);
+
+    Path pageClip(double jag) =>
+        TornEdgeClipper(jag: jag, teeth: restingTeeth).getClip(size);
+
+    test('at rest, the page clip keeps square top corners and rounds the '
+        'bottom ones by PadFrame.cornerRadius', () {
+      final clip = pageClip(0);
+
+      expect(clip.contains(const Offset(1, 1)), isTrue);
+      expect(clip.contains(Offset(size.width - 1, 1)), isTrue);
+      expect(clip.contains(Offset(1, size.height - 1)), isFalse);
+      expect(clip.contains(Offset(size.width - 1, size.height - 1)), isFalse);
+    });
+
+    test('during a tear (jag 0.5) the bottom corners are still excluded', () {
+      final clip = pageClip(0.5);
+
+      expect(clip.contains(Offset(1, size.height - 1)), isFalse);
+      expect(clip.contains(Offset(size.width - 1, size.height - 1)), isFalse);
+    });
+
+    testWidgets(
+      "the binding's top corners are rounded and its bottom corners are "
+      'square',
+      (tester) async {
+        await pumpPad(
+          tester,
+          top: quoteTop,
+          under: quoteUnder,
+          tearKind: TearKind.quote,
+        );
+
+        final decoration =
+            tester
+                    .widget<DecoratedBox>(
+                      find
+                          .descendant(
+                            of: find.byKey(PadFrame.bindingKey),
+                            matching: find.byType(DecoratedBox),
+                          )
+                          .first,
+                    )
+                    .decoration
+                as BoxDecoration;
+        final rect =
+            Offset.zero & tester.getSize(find.byKey(PadFrame.bindingKey));
+        final clip = decoration.getClipPath(rect, TextDirection.ltr);
+
+        expect(clip.contains(const Offset(1, 1)), isFalse);
+        expect(clip.contains(Offset(rect.width - 1, 1)), isFalse);
+        expect(clip.contains(Offset(1, rect.height - 1)), isTrue);
+        expect(clip.contains(Offset(rect.width - 1, rect.height - 1)), isTrue);
+      },
+    );
+
+    testWidgets(
+      'both edge sheets use PadFrame.cornerRadius for their bottom corners',
+      (tester) async {
+        await pumpPad(
+          tester,
+          top: quoteTop,
+          under: quoteUnder,
+          tearKind: TearKind.quote,
+        );
+
+        const expected = BorderRadius.only(
+          bottomLeft: Radius.circular(PadFrame.cornerRadius),
+          bottomRight: Radius.circular(PadFrame.cornerRadius),
+        );
+        for (final key in PadFrame.edgeKeys) {
+          final decoration =
+              tester
+                      .widget<DecoratedBox>(
+                        find
+                            .descendant(
+                              of: find.byKey(key),
+                              matching: find.byType(DecoratedBox),
+                            )
+                            .first,
+                      )
+                      .decoration
+                  as BoxDecoration;
+          expect(decoration.borderRadius, expected);
+        }
+      },
+    );
+  });
 }

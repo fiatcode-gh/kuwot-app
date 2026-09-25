@@ -1,9 +1,12 @@
 import 'package:flutter/rendering.dart';
+import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
 
-/// Clips a page to a full rectangle at rest, and to a jagged top edge as it
-/// tears away from the binding. `jag` is 0 (resting) to 1 (fully torn). The
-/// bottom and side corners are always square — a real pad page is cut flat
-/// everywhere except the top, where the page is glued to the pad.
+/// Clips a page to a rectangle at rest, and to a jagged top edge as it tears
+/// away from the binding. `jag` is 0 (resting) to 1 (fully torn). The top is
+/// square, since the real page starts glued flat to the binding — but the
+/// bottom-left and bottom-right corners are always rounded by
+/// [PadFrame.cornerRadius], at rest and throughout the tear, matching the
+/// pad frame's rounded corners (contract G5, D6).
 class TornEdgeClipper extends CustomClipper<Path> {
   const TornEdgeClipper({required this.jag, required this.teeth});
 
@@ -24,8 +27,15 @@ class TornEdgeClipper extends CustomClipper<Path> {
     final t = jag <= 0 ? 0.0 : (jag > 1 ? 1.0 : jag);
     final w = size.width;
     final h = size.height;
+    const r = PadFrame.cornerRadius;
     if (t <= 0.001) {
-      return Path()..addRect(Rect.fromLTWH(0, 0, w, h));
+      return Path()..addRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(0, 0, w, h),
+          bottomLeft: const Radius.circular(r),
+          bottomRight: const Radius.circular(r),
+        ),
+      );
     }
 
     final bite = _maxBite * t;
@@ -36,8 +46,10 @@ class TornEdgeClipper extends CustomClipper<Path> {
       path.lineTo(segW * i, bite * teeth[i]);
     }
     path.lineTo(w, bite * teeth.last);
-    path.lineTo(w, h);
-    path.lineTo(0, h);
+    path.lineTo(w, h - r);
+    path.arcToPoint(Offset(w - r, h), radius: const Radius.circular(r));
+    path.lineTo(r, h);
+    path.arcToPoint(Offset(0, h - r), radius: const Radius.circular(r));
     path.close();
     return path;
   }
