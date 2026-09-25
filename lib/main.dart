@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:kuwot/core/env.dart';
 import 'package:kuwot/core/presentation/bloc/app_bloc_observer.dart';
 import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
@@ -17,6 +18,10 @@ Future<void> main() async {
 
   // lock screen orientation to portrait
   await setPortraitMode();
+
+  // load date symbol data so DateFormat works in the device's own locale,
+  // not just en_US
+  await initializeDateFormatting();
 
   // dependency injection setup
   ic.setup();

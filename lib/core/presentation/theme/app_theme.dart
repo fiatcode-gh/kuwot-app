@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:kuwot/core/presentation/theme/app_fonts.dart';
+import 'package:kuwot/core/presentation/theme/app_palette.dart';
+
+/// Builds a [ThemeData] carrying [p] as a registered [AppPalette] extension.
+ThemeData buildAppTheme(AppPalette p, Brightness b) => ThemeData(
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: p.ink,
+    surface: p.paper,
+    brightness: b,
+  ),
+  scaffoldBackgroundColor: p.desk,
+  useMaterial3: true,
+  fontFamily: AppFonts.spaceGroteskFamily,
+  extensions: [p],
+);
 
 /// App light theme
-ThemeData lightTheme = ThemeData(
-  colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF343A40)),
-  useMaterial3: true,
-  fontFamily: GoogleFonts.dmSans().fontFamily,
-);
+final ThemeData lightTheme = buildAppTheme(AppPalette.light, Brightness.light);
 
 /// App dark theme
-ThemeData darkTheme = ThemeData(
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: const Color(0xFF212529),
-    brightness: Brightness.dark,
-  ),
-  useMaterial3: true,
-  fontFamily: GoogleFonts.dmSans().fontFamily,
-);
+final ThemeData darkTheme = buildAppTheme(AppPalette.dark, Brightness.dark);

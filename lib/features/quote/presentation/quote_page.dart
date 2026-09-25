@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:kuwot/core/presentation/theme/app_fonts.dart';
 import 'package:kuwot/core/router/app_router.gr.dart';
 import 'package:kuwot/features/quote/presentation/bloc/background_bloc.dart';
 import 'package:kuwot/features/quote/presentation/bloc/quote_bloc.dart';
@@ -51,7 +51,13 @@ class _QuotePageState extends State<QuotePage> {
         children: [
           Row(
             children: [
-              Text('Kuwot', style: GoogleFonts.sriracha(fontSize: 30)),
+              Text(
+                'Kuwot',
+                style: const TextStyle(
+                  fontFamily: AppFonts.frauncesFamily,
+                  fontSize: 30,
+                ),
+              ),
               const SizedBox(width: 2),
               SvgPicture.asset(
                 'assets/svgs/chat-quote.svg',
