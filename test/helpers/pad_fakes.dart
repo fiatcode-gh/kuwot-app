@@ -30,12 +30,18 @@ class FakeTime implements Time {
 
 /// A [QuoteRepository] that serves quotes 1, 2, 3, … in order from
 /// [getQuote], and answers [getQuoteById] from every quote it has drawn so
-/// far plus any [seed] quotes handed in up front. Either call can be made to
-/// fail on demand via [failRandom] / [failById].
+/// far plus any [seed] quotes handed in up front. [queue] quotes are drawn
+/// first, in order, before the auto-generated sequence resumes — for tests
+/// that need a specific fixture (e.g. the longest quote) to land on a
+/// particular draw without disturbing every other draw's id. Either call
+/// can be made to fail on demand via [failRandom] / [failById].
 class FakeQuoteRepository implements QuoteRepository {
-  FakeQuoteRepository({Map<int, Quote>? seed}) : _known = {...?seed};
+  FakeQuoteRepository({Map<int, Quote>? seed, List<Quote> queue = const []})
+    : _known = {...?seed},
+      _queue = List.of(queue);
 
   final Map<int, Quote> _known;
+  final List<Quote> _queue;
   int _nextId = 1;
 
   bool failRandom = false;
@@ -46,9 +52,14 @@ class FakeQuoteRepository implements QuoteRepository {
     if (failRandom) {
       return left(const UnknownFailure(message: 'random draw failed'));
     }
-    final id = _nextId++;
-    final quote = Quote(id: id, author: 'Author $id', body: 'Quote $id');
-    _known[id] = quote;
+    final Quote quote;
+    if (_queue.isNotEmpty) {
+      quote = _queue.removeAt(0);
+    } else {
+      final id = _nextId++;
+      quote = Quote(id: id, author: 'Author $id', body: 'Quote $id');
+    }
+    _known[quote.id] = quote;
     return right(quote);
   }
 

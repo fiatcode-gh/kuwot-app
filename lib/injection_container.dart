@@ -29,9 +29,7 @@ import 'package:kuwot/features/quote/domain/use_cases/get_quote.dart';
 import 'package:kuwot/features/quote/domain/use_cases/get_quote_by_id.dart';
 import 'package:kuwot/features/quote/domain/use_cases/load_pad_snapshot.dart';
 import 'package:kuwot/features/quote/domain/use_cases/save_pad_snapshot.dart';
-import 'package:kuwot/features/quote/presentation/bloc/background_bloc.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
-import 'package:kuwot/features/quote/presentation/bloc/quote_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -111,10 +109,6 @@ void setup() {
   getIt.registerLazySingleton<PurchaseDetailsCubit>(
     () => PurchaseDetailsCubit(getIt()),
   );
-  getIt.registerFactory<QuoteBloc>(() => QuoteBloc(getQuote: getIt()));
-  getIt.registerFactory<BackgroundBloc>(
-    () => BackgroundBloc(generator: getIt()),
-  );
   getIt.registerFactory<PadBloc>(
     () => PadBloc(
       getQuote: getIt(),
@@ -142,8 +136,7 @@ MultiBlocProvider getMultiBlocProvider({required Widget child}) {
       BlocProvider<InAppUpdateBloc>(create: (context) => getIt()),
       BlocProvider<InAppPurchaseBloc>(create: (context) => getIt()),
       BlocProvider<PurchaseDetailsCubit>(create: (context) => getIt()),
-      BlocProvider<QuoteBloc>(create: (context) => getIt()),
-      BlocProvider<BackgroundBloc>(create: (context) => getIt()),
+      BlocProvider<PadBloc>(create: (context) => getIt()),
     ],
     child: child,
   );
