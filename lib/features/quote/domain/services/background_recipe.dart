@@ -9,8 +9,8 @@ import 'package:kuwot/features/quote/domain/entities/background_style.dart';
 /// synchronously and is captured by `toImage` reliably.
 ///
 /// The seed first selects one of [engineCount] *engines* (soft blobs, linear,
-/// sweep, radial, duotone, corner mesh) and then drives every parameter inside
-/// it — angle, centres, radii, stops, colour order — continuously, so different
+/// sweep, radial, corner mesh) and then drives every parameter inside it —
+/// angle, centres, radii, stops, colour order — continuously, so different
 /// seeds never repeat even though the primitives are simple.
 ///
 /// Every colour comes from the palette, so the legibility guarantee holds:
@@ -27,8 +27,11 @@ class BackgroundRecipe extends Equatable {
     required this.stops,
   });
 
-  /// Number of engines the seed chooses between.
-  static const int engineCount = 6;
+  /// Number of engines the seed chooses between. (Engine 4, a hard two-tone
+  /// "duotone" split, was dropped after round 1: with its transition band
+  /// squeezed to 4-10% of the extent, 80%+ of it painted as two flat colour
+  /// regions with a sharp seam — it read as a UI stripe, not a gradient.)
+  static const int engineCount = 5;
 
   /// Selected engine index.
   final int engine;
@@ -37,7 +40,7 @@ class BackgroundRecipe extends Equatable {
   /// meaning (e.g. blobs: `[base0, base1, blob0, blob1, …]`).
   final List<Color> colors;
 
-  /// Primary direction / rotation in radians (linear, sweep, duotone).
+  /// Primary direction / rotation in radians (linear, sweep).
   final double angle;
 
   /// Gradient centres / focal points (blobs, radial, sweep, corner mesh).
@@ -46,7 +49,7 @@ class BackgroundRecipe extends Equatable {
   /// Radii as a fraction of the shortest side (blobs, radial, corner mesh).
   final List<double> radii;
 
-  /// Ascending gradient stop positions (linear, duotone).
+  /// Ascending gradient stop positions (linear).
   final List<double> stops;
 
   /// Which engine a seed selects. Matches [fromSeed]'s first draw.
@@ -64,7 +67,6 @@ class BackgroundRecipe extends Equatable {
       1 => _linear(engine, pal, rng),
       2 => _sweep(engine, pal, rng),
       3 => _radial(engine, pal, rng),
-      4 => _duotone(engine, pal, rng),
       _ => _cornerMesh(engine, pal, rng),
     };
   }
@@ -124,7 +126,7 @@ class BackgroundRecipe extends Equatable {
     return BackgroundRecipe(
       engine: engine,
       colors: pal,
-      angle: rng.nextDouble() * 2 * math.pi,
+      angle: 0,
       points: [Alignment(math.cos(dir) * dist, math.sin(dir) * dist)],
       radii: const [],
       stops: const [],
@@ -149,27 +151,7 @@ class BackgroundRecipe extends Equatable {
     );
   }
 
-  // --- Engine 4: duotone diagonal split --------------------------------------
-
-  static BackgroundRecipe _duotone(
-    int engine,
-    List<Color> pal,
-    math.Random rng,
-  ) {
-    final colors = [pal[0], pal[1 % pal.length]];
-    final mid = 0.35 + rng.nextDouble() * 0.3; // 0.35..0.65
-    final seam = 0.04 + rng.nextDouble() * 0.06; // soft transition width
-    return BackgroundRecipe(
-      engine: engine,
-      colors: colors,
-      angle: rng.nextDouble() * 2 * math.pi,
-      points: const [],
-      radii: const [],
-      stops: [(mid - seam).clamp(0.0, 1.0), (mid + seam).clamp(0.0, 1.0)],
-    );
-  }
-
-  // --- Engine 5: corner mesh (colour pulled to the corners) ------------------
+  // --- Engine 4: corner mesh (colour pulled to the corners) -----------------
 
   static BackgroundRecipe _cornerMesh(
     int engine,

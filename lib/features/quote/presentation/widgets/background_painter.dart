@@ -27,8 +27,6 @@ class BackgroundPainter extends CustomPainter {
         _paintSweep(canvas, rect);
       case 3:
         _paintRadial(canvas, rect);
-      case 4:
-        _paintDuotone(canvas, rect);
       default:
         _paintCornerMesh(canvas, rect);
     }
@@ -72,8 +70,8 @@ class BackgroundPainter extends CustomPainter {
       rect,
       SweepGradient(
         center: recipe.points.first,
-        startAngle: recipe.angle,
-        endAngle: recipe.angle + 2 * math.pi,
+        startAngle: 0,
+        endAngle: 2 * math.pi,
         colors: [...recipe.colors, recipe.colors.first], // loop for smooth wrap
       ),
     );
@@ -87,19 +85,6 @@ class BackgroundPainter extends CustomPainter {
         center: recipe.points.first,
         radius: recipe.radii.first,
         colors: recipe.colors,
-      ),
-    );
-  }
-
-  void _paintDuotone(Canvas canvas, Rect rect) {
-    _fill(
-      canvas,
-      rect,
-      LinearGradient(
-        begin: _begin(recipe.angle),
-        end: _end(recipe.angle),
-        colors: recipe.colors,
-        stops: recipe.stops,
       ),
     );
   }
