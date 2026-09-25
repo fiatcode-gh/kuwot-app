@@ -62,48 +62,37 @@ class _TipJarSectionState extends State<TipJarSection> {
   }
 
   List<Widget> _buildProductList(AppPalette palette) {
-    return _products.map((product) {
+    final rows = <Widget>[];
+    for (final product in _products) {
+      if (rows.isNotEmpty) {
+        rows.add(Divider(height: 1, color: palette.divider));
+      }
       final title = product.title.replaceAll('(Kuwot)', '');
       final description = product.description.replaceAll(
         RegExp(r'[\r\n]+'),
         '',
       );
-      final productCard = Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
+      rows.add(
+        ListTile(
+          contentPadding: EdgeInsets.zero,
           onTap: () => context.read<InAppPurchaseBloc>().add(
             PurchaseConsumableProductEvent(product),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  title,
-                  style: AppFonts.body(
-                    size: 16,
-                    color: palette.ink,
-                    weight: 600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: AppFonts.body(size: 14, color: palette.inkMuted),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  product.price,
-                  style: AppFonts.label(size: 14, color: palette.ink),
-                ),
-              ],
-            ),
+          title: Text(
+            title,
+            style: AppFonts.body(size: 16, color: palette.ink, weight: 600),
+          ),
+          subtitle: Text(
+            description,
+            style: AppFonts.body(size: 14, color: palette.inkMuted),
+          ),
+          trailing: Text(
+            product.price,
+            style: AppFonts.label(size: 14, color: palette.ink),
           ),
         ),
       );
-
-      return productCard;
-    }).toList();
+    }
+    return rows;
   }
 }

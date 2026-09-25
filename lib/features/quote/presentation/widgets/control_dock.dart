@@ -118,13 +118,18 @@ class _DockButton extends StatelessWidget {
                 children: [
                   FaIcon(icon, size: 20, color: palette.ink),
                   const SizedBox(height: 6),
-                  Text(
-                    label.toUpperCase(),
-                    style: AppFonts.label(
-                      size: 10.5,
-                      color: palette.inkMuted,
-                      weight: 600,
-                      letterSpacing: 1.4,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label.toUpperCase(),
+                      maxLines: 1,
+                      softWrap: false,
+                      style: AppFonts.label(
+                        size: 10.5,
+                        color: palette.inkMuted,
+                        weight: 600,
+                        letterSpacing: 1.4,
+                      ),
                     ),
                   ),
                 ],

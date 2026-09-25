@@ -1,11 +1,13 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show TextDirection, Tristate;
 
-import 'package:flutter/material.dart' show Size;
+import 'package:flutter/material.dart'
+    show InkWell, RichText, Size, TextPainter;
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/presentation/widgets/control_dock.dart';
 
+import '../../../../helpers/load_app_fonts.dart';
 import '../../../../helpers/pad_test_app.dart';
 
 void main() {
@@ -111,10 +113,33 @@ void main() {
     expect(find.byTooltip('Settings'), findsOneWidget);
   });
 
-  for (final scale in [1.0, 2.0]) {
-    testWidgets(
-      'the four labels do not overflow at 360dp width, ${scale}x text scale',
-      (tester) async {
+  group('label fit at 360x640, real fonts', () {
+    setUpAll(loadAppFonts);
+
+    const order = ['New quote', 'Restyle', 'Share', 'Settings'];
+
+    /// The label's natural, unwrapped size: the same [RichText] the widget
+    /// actually painted (so it carries the real merged style, font and text
+    /// scaler), laid out with no width limit. `FittedBox` lays its child
+    /// out the same way, so comparing a button's rendered height against
+    /// this is a direct wrap-vs-no-wrap check, independent of scale-down.
+    Size naturalLabelSize(WidgetTester tester, Finder finder) {
+      final richText = tester.widget<RichText>(
+        find.descendant(of: finder, matching: find.byType(RichText)),
+      );
+      final painter = TextPainter(
+        text: richText.text,
+        textDirection: richText.textDirection ?? TextDirection.ltr,
+        textScaler: richText.textScaler,
+      )..layout();
+      final size = painter.size;
+      painter.dispose();
+      return size;
+    }
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('every label renders on one line and fits its button at '
+          '${scale}x text scale', (tester) async {
         tester.view.physicalSize = const Size(360, 640);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
@@ -135,7 +160,37 @@ void main() {
         await tester.pump();
 
         expect(tester.takeException(), isNull);
-      },
-    );
-  }
+
+        for (final label in order) {
+          final finder = find.text(label.toUpperCase());
+          final natural = naturalLabelSize(tester, finder);
+
+          expect(
+            tester.getSize(finder).height,
+            closeTo(natural.height, 0.5),
+            reason: '$label must render on one line, not wrap mid-word',
+          );
+
+          final buttonWidth = tester
+              .getRect(
+                find.ancestor(of: finder, matching: find.byType(InkWell)),
+              )
+              .width;
+          expect(
+            tester.getRect(finder).width,
+            lessThanOrEqualTo(buttonWidth),
+            reason: '$label must fit inside its dock button',
+          );
+
+          if (scale == 1.0) {
+            expect(
+              tester.getRect(finder).width,
+              closeTo(natural.width, 0.5),
+              reason: '$label must stay full size at 1.0x, not shrunk',
+            );
+          }
+        }
+      });
+    }
+  });
 }

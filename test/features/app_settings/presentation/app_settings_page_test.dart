@@ -7,6 +7,7 @@ import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/features/app_settings/presentation/app_settings_page.dart';
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../helpers/load_app_fonts.dart';
@@ -24,13 +25,15 @@ final _sampleProducts = [
 ];
 
 /// Pumps [AppSettingsPage] at 360x640 with a real [ThemeModeCubit] and a
-/// mocked [InAppPurchaseBloc] fixed at [purchaseState], and waits for the
-/// first load to settle.
-Future<void> _pumpSettings(
+/// mocked [InAppPurchaseBloc] fixed at [purchaseState] (or replaying
+/// [stream], defaulting to empty, on top of it), and waits for the first
+/// load to settle. Returns the mock bloc so callers can verify dispatches.
+Future<MockInAppPurchaseBloc> _pumpSettings(
   WidgetTester tester, {
   required ThemeData theme,
   required InAppPurchaseState purchaseState,
   double textScale = 1.0,
+  Stream<InAppPurchaseState>? stream,
 }) async {
   tester.view.physicalSize = const Size(360, 640);
   tester.view.devicePixelRatio = 1;
@@ -40,7 +43,7 @@ Future<void> _pumpSettings(
   final purchaseBloc = MockInAppPurchaseBloc();
   whenListen(
     purchaseBloc,
-    const Stream<InAppPurchaseState>.empty(),
+    stream ?? const Stream<InAppPurchaseState>.empty(),
     initialState: purchaseState,
   );
 
@@ -70,6 +73,7 @@ Future<void> _pumpSettings(
     ),
   );
   await tester.pumpAndSettle();
+  return purchaseBloc;
 }
 
 void main() {
@@ -120,20 +124,6 @@ void main() {
     }
 
     testWidgets(
-      'the Tip jar section empty state at 360x640, ${themeEntry.key} theme '
-      'does not overflow',
-      (tester) async {
-        await _pumpSettings(
-          tester,
-          theme: themeEntry.value,
-          purchaseState: const ConsumableProductsLoadedState([]),
-        );
-
-        expect(tester.takeException(), isNull);
-      },
-    );
-
-    testWidgets(
       'the Tip jar section error state at 360x640, ${themeEntry.key} theme '
       'does not overflow',
       (tester) async {
@@ -158,6 +148,25 @@ void main() {
 
     expect(find.text('Small Coffee'), findsOneWidget);
     expect(find.text(r'$1.00'), findsOneWidget);
+  });
+
+  testWidgets('the Tip jar section shows the products once the bloc moves from '
+      'Getting to Loaded on first open, and dispatches the load exactly once', (
+    tester,
+  ) async {
+    final purchaseBloc = await _pumpSettings(
+      tester,
+      theme: lightTheme,
+      purchaseState: const InAppPurchaseInitialState(),
+      stream: Stream<InAppPurchaseState>.fromIterable([
+        const GettingConsumableProductsState(),
+        ConsumableProductsLoadedState(_sampleProducts),
+      ]),
+    );
+
+    expect(find.text('Small Coffee'), findsOneWidget);
+    verify(() => purchaseBloc.add(const GetConsumableProductsEvent()))
+        .called(1);
   });
 
   testWidgets('sections appear in order: Theme, Tip jar, About', (
