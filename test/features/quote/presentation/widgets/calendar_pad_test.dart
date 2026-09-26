@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,8 @@ import 'package:kuwot/features/quote/domain/entities/palettes.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
+import 'package:kuwot/features/quote/presentation/widgets/page_header.dart';
+import 'package:kuwot/features/quote/presentation/widgets/tear_sheet.dart';
 import 'package:kuwot/features/quote/presentation/widgets/torn_edge_clipper.dart';
 
 import '../../../../helpers/load_app_fonts.dart';
@@ -462,5 +465,167 @@ void main() {
         }
       },
     );
+  });
+
+  group('the torn paper moves in front of the pad (D8, task 15)', () {
+    HitTestResult hitTestAt(WidgetTester tester, Offset point) {
+      final result = HitTestResult();
+      tester.binding.renderViews.single.hitTest(result, position: point);
+      return result;
+    }
+
+    bool pathIncludes(HitTestResult result, RenderObject target) =>
+        result.path.any((entry) => entry.target == target);
+
+    // The `RepaintBoundary` wrapping the moving sheet's own content
+    // (`_buildVisual`'s `RepaintBoundary(child: widget.child)`): an
+    // ancestor of everything the sheet paints — background, text, all of
+    // it — so a hit anywhere inside the sheet's content proves it via this
+    // one stable marker, wherever the sheet currently renders (in place or
+    // through the overlay), regardless of which specific descendant (text
+    // over background, say) happens to win the innermost hit.
+    Finder movingSheetContentFinder() => find.descendant(
+      of: find.byType(TearSheet),
+      matching: find.byType(RepaintBoundary),
+    );
+
+    testWidgets(
+      'a page tear springing back reaches above the binding, unclipped',
+      (tester) async {
+        await pumpPad(
+          tester,
+          top: pageTop,
+          under: pageUnder,
+          tearKind: TearKind.page,
+        );
+        final bindingCenter = tester
+            .getRect(find.byKey(PadFrame.bindingKey))
+            .center;
+
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('24')),
+        );
+        // ~0.95 of the threshold: short of tearing, so releasing springs
+        // back; `Curves.elasticOut` then overshoots well past rest,
+        // carrying the sheet up over the binding for part of the animation.
+        await gesture.moveBy(const Offset(0, 123.5));
+        await tester.pump();
+        await gesture.up();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 66));
+
+        final finder = movingSheetContentFinder();
+        expect(
+          pathIncludes(
+            hitTestAt(tester, bindingCenter),
+            tester.renderObject(finder),
+          ),
+          isTrue,
+        );
+
+        await tester.pumpAndSettle();
+      },
+    );
+
+    testWidgets(
+      'a page tear flying away extends past the whole pad, unclipped',
+      (tester) async {
+        // Constrained to well under the test window so there is on-screen
+        // room below the pad for the fly-away to reach into.
+        final padKey = GlobalKey<CalendarPadState>();
+        await tester.pumpWidget(
+          padTestApp(
+            Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                height: 300,
+                width: 400,
+                child: CalendarPad(
+                  key: padKey,
+                  top: pageTop,
+                  under: pageUnder,
+                  tearKind: TearKind.page,
+                  revision: 0,
+                  onTornAway: () {},
+                  locale: const Locale('en', 'US'),
+                ),
+              ),
+            ),
+          ),
+        );
+        final pageBottom = tester.getRect(find.byKey(PadFrame.pageKey)).bottom;
+
+        unawaited(padKey.currentState!.tearAway());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 180));
+
+        final finder = movingSheetContentFinder();
+        final point = tester.getCenter(finder);
+        expect(point.dy, greaterThan(pageBottom));
+        expect(
+          pathIncludes(hitTestAt(tester, point), tester.renderObject(finder)),
+          isTrue,
+        );
+
+        await tester.pumpAndSettle();
+      },
+    );
+
+    testWidgets(
+      'a quote tear springing back reaches above the header, unclipped',
+      (tester) async {
+        await pumpPad(
+          tester,
+          top: quoteTop,
+          under: quoteUnder,
+          tearKind: TearKind.quote,
+        );
+        final headerRect = tester.getRect(find.byType(PageHeader));
+        final justInsideHeader = Offset(
+          headerRect.center.dx,
+          headerRect.bottom - 5,
+        );
+
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('Top quote')),
+        );
+        await gesture.moveBy(const Offset(0, 123.5));
+        await tester.pump();
+        await gesture.up();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 66));
+
+        final finder = movingSheetContentFinder();
+        expect(
+          pathIncludes(
+            hitTestAt(tester, justInsideHeader),
+            tester.renderObject(finder),
+          ),
+          isTrue,
+        );
+
+        await tester.pumpAndSettle();
+      },
+    );
+
+    testWidgets('at rest, the binding is still painted above the page', (
+      tester,
+    ) async {
+      await pumpPad(
+        tester,
+        top: pageTop,
+        under: pageUnder,
+        tearKind: TearKind.page,
+      );
+      final bindingRect = tester.getRect(find.byKey(PadFrame.bindingKey));
+      final bindingRender = tester.renderObject(
+        find.byKey(PadFrame.bindingKey),
+      );
+
+      expect(
+        pathIncludes(hitTestAt(tester, bindingRect.center), bindingRender),
+        isTrue,
+      );
+    });
   });
 }

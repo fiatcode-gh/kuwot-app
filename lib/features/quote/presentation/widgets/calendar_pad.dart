@@ -44,43 +44,41 @@ class PadFrame extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRect(
-        child: Stack(
-          children: [
-            Positioned(
-              key: edgeKeys[1],
-              left: 0,
-              right: 0,
-              top: bindingHeight,
-              bottom: 0,
-              child: _edgeSheet(palette.stackB, palette.divider),
-            ),
-            Positioned(
-              key: edgeKeys[0],
-              left: 0,
-              right: 0,
-              top: bindingHeight,
-              bottom: edgeStep,
-              child: _edgeSheet(palette.stackA, palette.divider),
-            ),
-            Positioned(
-              key: pageKey,
-              left: 0,
-              right: 0,
-              top: bindingHeight,
-              bottom: edgeStep * 2,
-              child: page,
-            ),
-            Positioned(
-              key: bindingKey,
-              left: 0,
-              right: 0,
-              top: 0,
-              height: bindingHeight,
-              child: _bindingBar(palette),
-            ),
-          ],
-        ),
+      child: Stack(
+        children: [
+          Positioned(
+            key: edgeKeys[1],
+            left: 0,
+            right: 0,
+            top: bindingHeight,
+            bottom: 0,
+            child: _edgeSheet(palette.stackB, palette.divider),
+          ),
+          Positioned(
+            key: edgeKeys[0],
+            left: 0,
+            right: 0,
+            top: bindingHeight,
+            bottom: edgeStep,
+            child: _edgeSheet(palette.stackA, palette.divider),
+          ),
+          Positioned(
+            key: pageKey,
+            left: 0,
+            right: 0,
+            top: bindingHeight,
+            bottom: edgeStep * 2,
+            child: page,
+          ),
+          Positioned(
+            key: bindingKey,
+            left: 0,
+            right: 0,
+            top: 0,
+            height: bindingHeight,
+            child: _bindingBar(palette),
+          ),
+        ],
       ),
     );
   }
