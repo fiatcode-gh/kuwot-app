@@ -68,7 +68,12 @@ class PadFrame extends StatelessWidget {
             right: 0,
             top: bindingHeight,
             bottom: edgeStep * 2,
-            child: page,
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(cornerRadius),
+              ),
+              child: page,
+            ),
           ),
           Positioned(
             key: bindingKey,

@@ -292,10 +292,12 @@ class TearSheetState extends State<TearSheet>
           link: _link,
           child: OverlayPortal(
             controller: _overlay,
-            overlayChildBuilder: (context) => CompositedTransformFollower(
-              link: _link,
-              showWhenUnlinked: false,
-              child: _buildVisual(),
+            overlayChildBuilder: (context) => IgnorePointer(
+              child: CompositedTransformFollower(
+                link: _link,
+                showWhenUnlinked: false,
+                child: _buildVisual(),
+              ),
             ),
             child: GestureDetector(
               onPanStart: _onPanStart,

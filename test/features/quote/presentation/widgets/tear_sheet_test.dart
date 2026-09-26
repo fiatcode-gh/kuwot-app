@@ -46,4 +46,58 @@ void main() {
       expect(tornCount.value, 1);
     },
   );
+
+  testWidgets(
+    'a tap on something underneath still reaches it while the sheet is '
+    'dragging over it (F2)',
+    (tester) async {
+      var taps = 0;
+      final key = GlobalKey<TearSheetState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                width: 200,
+                height: 200,
+                child: GestureDetector(
+                  onTap: () => taps++,
+                  child: const ColoredBox(color: Colors.blue),
+                ),
+              ),
+              TearSheet(
+                key: key,
+                teethSeed: 1,
+                onTornAway: () {},
+                child: const SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: Text('Page'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Page')),
+      );
+      await gesture.moveBy(const Offset(0, 20));
+      await tester.pump();
+
+      // The sheet is now dragging (rendered through the overlay, above the
+      // button), but a second, independent finger tapping the button
+      // beneath it must still register.
+      await tester.tapAt(const Offset(100, 100));
+      await tester.pump();
+
+      expect(taps, 1);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    },
+  );
 }

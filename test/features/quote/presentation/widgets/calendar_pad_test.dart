@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/features/quote/domain/entities/background_style.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_day.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_page.dart';
@@ -467,7 +469,233 @@ void main() {
     );
   });
 
+  group('the page slot corners nest with the edge sheets at rest, not square '
+      'page paper underneath (F1)', () {
+    final boundaryKey = GlobalKey();
+
+    // Realistically wide quotes: a short fixture (as used elsewhere in
+    // this file) lets `QuoteStrip`'s content size narrower than the page
+    // and center, which would leave paper unpainted at the sides for a
+    // reason unrelated to corner rounding and confound this probe.
+    const wideTopQuote = Quote(
+      id: 101,
+      body:
+          'The huge modern heresy is to alter the human soul to fit '
+          'modern social conditions, instead of altering modern social '
+          'conditions to fit the human soul.',
+      author: 'G.K. Chesterton',
+    );
+    const wideUnderQuote = Quote(
+      id: 102,
+      body:
+          'Some men see things as they are and say why; I dream things '
+          'that never were and say why not.',
+      author: 'George Bernard Shaw',
+    );
+    final widePageTop = PadPage(
+      day: _yesterday,
+      quote: wideTopQuote,
+      header: style,
+    );
+    final widePageUnder = PadPage(
+      day: _today,
+      quote: wideUnderQuote,
+      header: style,
+    );
+    final wideQuoteTop = PadPage(
+      day: _today,
+      quote: wideTopQuote,
+      header: style,
+    );
+    final wideQuoteUnder = PadPage(
+      day: _today,
+      quote: wideUnderQuote,
+      header: style,
+    );
+
+    const captureRatio = 4.0;
+
+    Future<(ByteData, int)> capture(
+      WidgetTester tester, {
+      required PadPage top,
+      required PadPage under,
+      required TearKind tearKind,
+      required ThemeData theme,
+    }) async {
+      await tester.pumpWidget(
+        padTestApp(
+          RepaintBoundary(
+            key: boundaryKey,
+            child: CalendarPad(
+              top: top,
+              under: under,
+              tearKind: tearKind,
+              revision: 0,
+              onTornAway: () {},
+              locale: const Locale('en', 'US'),
+            ),
+          ),
+          theme: theme,
+        ),
+      );
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(boundaryKey),
+      );
+      final result = await tester.runAsync(() async {
+        final image = await boundary.toImage(pixelRatio: captureRatio);
+        final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+        return (data!, image.width);
+      });
+      return result!;
+    }
+
+    // Reads the pixel at [point] (logical coordinates, relative to the
+    // captured boundary), sampled a quarter-dp further into the corner
+    // than [point] itself. `toImage`'s antialiasing softens roughly one
+    // *physical* pixel around a clip edge; at `captureRatio` that band is
+    // a quarter of a logical dp wide, well short of this nudge, so the
+    // read lands cleanly on one side of the corner clip rather than in
+    // its blend zone.
+    Color colorAt(ByteData data, int imageWidth, Offset point) {
+      final x = (point.dx * captureRatio).round();
+      final y = (point.dy * captureRatio).round();
+      final index = (y * imageWidth + x) * 4;
+      return Color.fromARGB(
+        data.getUint8(index + 3),
+        data.getUint8(index),
+        data.getUint8(index + 1),
+        data.getUint8(index + 2),
+      );
+    }
+
+    for (final kind in TearKind.values) {
+      for (final themeEntry in {
+        'light': lightTheme,
+        'dark': darkTheme,
+      }.entries) {
+        testWidgets(
+          '$kind, ${themeEntry.key} theme: 1dp inside each bottom corner '
+          'shows the edge sheet, not page paper',
+          (tester) async {
+            final (data, imageWidth) = await capture(
+              tester,
+              top: kind == TearKind.page ? widePageTop : wideQuoteTop,
+              under: kind == TearKind.page ? widePageUnder : wideQuoteUnder,
+              tearKind: kind,
+              theme: themeEntry.value,
+            );
+
+            final boundaryOrigin = tester.getTopLeft(find.byKey(boundaryKey));
+            final pageRect = tester.getRect(find.byKey(PadFrame.pageKey));
+            final edge1Rect = tester.getRect(find.byKey(PadFrame.edgeKeys[0]));
+
+            // Well inside the page's own paper, away from any corner.
+            final paperRef =
+                Offset(pageRect.center.dx, pageRect.bottom - 20) -
+                boundaryOrigin;
+            // Well inside edge sheet 1's own flat middle, away from its
+            // own (further down) rounded corners and its 1dp bottom
+            // divider border.
+            final edgeRef =
+                Offset(edge1Rect.center.dx, edge1Rect.bottom - 2) -
+                boundaryOrigin;
+            final bottomLeft =
+                Offset(pageRect.left + 1, pageRect.bottom - 1) - boundaryOrigin;
+            final bottomRight =
+                Offset(pageRect.right - 1, pageRect.bottom - 1) -
+                boundaryOrigin;
+
+            final paperColor = colorAt(data, imageWidth, paperRef);
+            final edgeColor = colorAt(data, imageWidth, edgeRef);
+
+            for (final corner in [bottomLeft, bottomRight]) {
+              final cornerColor = colorAt(data, imageWidth, corner);
+              expect(
+                cornerColor,
+                isNot(paperColor),
+                reason: 'corner $corner should not show page paper',
+              );
+              expect(
+                cornerColor,
+                edgeColor,
+                reason: 'corner $corner should show the edge sheet colour',
+              );
+            }
+          },
+        );
+      }
+    }
+  });
+
   group('the torn paper moves in front of the pad (D8, task 15)', () {
+    // The moving sheet's overlay visual is wrapped in `IgnorePointer`
+    // (contract F2 correction): hit-testing it no longer proves it paints
+    // above its surroundings, so these checks instead capture the actual
+    // composited pixels and confirm the sheet's paint changes what was
+    // there at rest.
+    final boundaryKey = GlobalKey();
+
+    Future<ValueNotifier<int>> pumpCapturablePad(
+      WidgetTester tester, {
+      required PadPage top,
+      required PadPage under,
+      required TearKind tearKind,
+    }) async {
+      final tornCount = ValueNotifier(0);
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundaryKey,
+          child: padTestApp(
+            CalendarPad(
+              top: top,
+              under: under,
+              tearKind: tearKind,
+              revision: 0,
+              onTornAway: () => tornCount.value++,
+              locale: const Locale('en', 'US'),
+            ),
+          ),
+        ),
+      );
+      return tornCount;
+    }
+
+    Future<(ByteData, int)> captureFrame(WidgetTester tester) async {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(boundaryKey),
+      );
+      final result = await tester.runAsync(() async {
+        final image = await boundary.toImage();
+        final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+        return (data!, image.width);
+      });
+      return result!;
+    }
+
+    Color sampleColor(
+      (ByteData, int) frame,
+      Offset boundaryOrigin,
+      Offset point,
+    ) {
+      final (data, imageWidth) = frame;
+      final local = point - boundaryOrigin;
+      final x = local.dx.round();
+      final y = local.dy.round();
+      final index = (y * imageWidth + x) * 4;
+      return Color.fromARGB(
+        data.getUint8(index + 3),
+        data.getUint8(index),
+        data.getUint8(index + 1),
+        data.getUint8(index + 2),
+      );
+    }
+
+    Future<Color> pixelAt(WidgetTester tester, Offset point) async {
+      final frame = await captureFrame(tester);
+      final origin = tester.getTopLeft(find.byKey(boundaryKey));
+      return sampleColor(frame, origin, point);
+    }
+
     HitTestResult hitTestAt(WidgetTester tester, Offset point) {
       final result = HitTestResult();
       tester.binding.renderViews.single.hitTest(result, position: point);
@@ -477,22 +705,10 @@ void main() {
     bool pathIncludes(HitTestResult result, RenderObject target) =>
         result.path.any((entry) => entry.target == target);
 
-    // The `RepaintBoundary` wrapping the moving sheet's own content
-    // (`_buildVisual`'s `RepaintBoundary(child: widget.child)`): an
-    // ancestor of everything the sheet paints — background, text, all of
-    // it — so a hit anywhere inside the sheet's content proves it via this
-    // one stable marker, wherever the sheet currently renders (in place or
-    // through the overlay), regardless of which specific descendant (text
-    // over background, say) happens to win the innermost hit.
-    Finder movingSheetContentFinder() => find.descendant(
-      of: find.byType(TearSheet),
-      matching: find.byType(RepaintBoundary),
-    );
-
     testWidgets(
       'a page tear springing back reaches above the binding, unclipped',
       (tester) async {
-        await pumpPad(
+        await pumpCapturablePad(
           tester,
           top: pageTop,
           under: pageUnder,
@@ -501,6 +717,7 @@ void main() {
         final bindingCenter = tester
             .getRect(find.byKey(PadFrame.bindingKey))
             .center;
+        final restColor = await pixelAt(tester, bindingCenter);
 
         final gesture = await tester.startGesture(
           tester.getCenter(find.text('24')),
@@ -514,13 +731,13 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 66));
 
-        final finder = movingSheetContentFinder();
+        final duringColor = await pixelAt(tester, bindingCenter);
         expect(
-          pathIncludes(
-            hitTestAt(tester, bindingCenter),
-            tester.renderObject(finder),
-          ),
-          isTrue,
+          duringColor,
+          isNot(restColor),
+          reason:
+              'the springing-back sheet should now be painting over the '
+              'static binding',
         );
 
         await tester.pumpAndSettle();
@@ -534,37 +751,59 @@ void main() {
         // room below the pad for the fly-away to reach into.
         final padKey = GlobalKey<CalendarPadState>();
         await tester.pumpWidget(
-          padTestApp(
-            Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                height: 300,
-                width: 400,
-                child: CalendarPad(
-                  key: padKey,
-                  top: pageTop,
-                  under: pageUnder,
-                  tearKind: TearKind.page,
-                  revision: 0,
-                  onTornAway: () {},
-                  locale: const Locale('en', 'US'),
+          RepaintBoundary(
+            key: boundaryKey,
+            child: padTestApp(
+              Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  height: 300,
+                  width: 400,
+                  child: CalendarPad(
+                    key: padKey,
+                    top: pageTop,
+                    under: pageUnder,
+                    tearKind: TearKind.page,
+                    revision: 0,
+                    onTornAway: () {},
+                    locale: const Locale('en', 'US'),
+                  ),
                 ),
               ),
             ),
           ),
         );
         final pageBottom = tester.getRect(find.byKey(PadFrame.pageKey)).bottom;
+        final finder = find.descendant(
+          of: find.byType(TearSheet),
+          matching: find.byType(RepaintBoundary),
+        );
+
+        // Captured before the fly starts, so it holds whatever painted at
+        // rest at every coordinate — including wherever the sheet's own
+        // content ends up once it has flown, sampled below.
+        final restFrame = await captureFrame(tester);
+        final boundaryOrigin = tester.getTopLeft(find.byKey(boundaryKey));
 
         unawaited(padKey.currentState!.tearAway());
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 180));
+        // Past the whole pad already (contract-required geometry) but
+        // still short of full transparency, so the paint-order check below
+        // has a visible colour to compare — `_flyAway`'s opacity fade
+        // reaches 0 by ~160ms into the 260ms flight.
+        await tester.pump(const Duration(milliseconds: 140));
 
-        final finder = movingSheetContentFinder();
         final point = tester.getCenter(finder);
         expect(point.dy, greaterThan(pageBottom));
+
+        final restColor = sampleColor(restFrame, boundaryOrigin, point);
+        final duringColor = await pixelAt(tester, point);
         expect(
-          pathIncludes(hitTestAt(tester, point), tester.renderObject(finder)),
-          isTrue,
+          duringColor,
+          isNot(restColor),
+          reason:
+              'the flying sheet should now be painting below the pad, '
+              'past where it was clipped before',
         );
 
         await tester.pumpAndSettle();
@@ -574,7 +813,7 @@ void main() {
     testWidgets(
       'a quote tear springing back reaches above the header, unclipped',
       (tester) async {
-        await pumpPad(
+        await pumpCapturablePad(
           tester,
           top: quoteTop,
           under: quoteUnder,
@@ -585,6 +824,7 @@ void main() {
           headerRect.center.dx,
           headerRect.bottom - 5,
         );
+        final restColor = await pixelAt(tester, justInsideHeader);
 
         final gesture = await tester.startGesture(
           tester.getCenter(find.text('Top quote')),
@@ -595,13 +835,13 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 66));
 
-        final finder = movingSheetContentFinder();
+        final duringColor = await pixelAt(tester, justInsideHeader);
         expect(
-          pathIncludes(
-            hitTestAt(tester, justInsideHeader),
-            tester.renderObject(finder),
-          ),
-          isTrue,
+          duringColor,
+          isNot(restColor),
+          reason:
+              'the springing-back sheet should now be painting over the '
+              'static header',
         );
 
         await tester.pumpAndSettle();

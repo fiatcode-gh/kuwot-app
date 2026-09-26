@@ -132,6 +132,42 @@ void main() {
     await bloc.close();
   });
 
+  test(
+    'right after a commit, the top is promoted to the drawn quote and the '
+    'tear kind updates before the next under-page finishes drawing',
+    () async {
+      final time = FakeTime(DateTime(2026, 3, 10));
+      final quotes = FakeQuoteRepository();
+      final bloc = await buildPadBloc(time: time, quotes: quotes);
+      bloc.add(const PadStarted());
+      await pumpEventQueue();
+
+      final before = bloc.state as PadReady;
+      final drawnUnder = before.under;
+
+      quotes.delayNextGetQuote();
+      bloc.add(PadTearCommitted(before.revision));
+      await pumpEventQueue();
+
+      final duringRedraw = bloc.state as PadReady;
+      expect(duringRedraw.top.quote, drawnUnder.quote);
+      expect(duringRedraw.top.day, before.top.day);
+      expect(duringRedraw.top.header, before.top.header);
+      expect(duringRedraw.tearKind, TearKind.quote);
+      expect(duringRedraw.revision, before.revision + 1);
+
+      quotes.releaseGetQuote();
+      await pumpEventQueue();
+
+      final after = bloc.state as PadReady;
+      expect(after.top.quote, drawnUnder.quote);
+      expect(after.revision, duringRedraw.revision);
+      expect(after.under.quote, isNot(drawnUnder.quote));
+
+      await bloc.close();
+    },
+  );
+
   Future<void> newDayGap(int gapDays) async {
     final time = FakeTime(DateTime(2026, 3, 10));
     final quotes = FakeQuoteRepository();
