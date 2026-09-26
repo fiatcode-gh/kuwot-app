@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:fpdart/fpdart.dart';
 import 'package:kuwot/core/data/local/config.dart';
 import 'package:kuwot/core/error/failure.dart';
@@ -36,10 +34,7 @@ class FakeTime implements Time {
 /// first, in order, before the auto-generated sequence resumes — for tests
 /// that need a specific fixture (e.g. the longest quote) to land on a
 /// particular draw without disturbing every other draw's id. Either call
-/// can be made to fail on demand via [failRandom] / [failById]. A test can
-/// make the *next* [getQuote] call wait for [releaseGetQuote] via
-/// [delayNextGetQuote], to observe bloc state in the gap between a commit
-/// and the redraw of the next under-page.
+/// can be made to fail on demand via [failRandom] / [failById].
 class FakeQuoteRepository implements QuoteRepository {
   FakeQuoteRepository({Map<int, Quote>? seed, List<Quote> queue = const []})
     : _known = {...?seed},
@@ -52,22 +47,8 @@ class FakeQuoteRepository implements QuoteRepository {
   bool failRandom = false;
   bool failById = false;
 
-  Completer<void>? _gate;
-
-  /// Makes the next call to [getQuote] wait until [releaseGetQuote] is
-  /// called, instead of resolving straight away.
-  void delayNextGetQuote() => _gate = Completer<void>();
-
-  /// Lets a [getQuote] call gated by [delayNextGetQuote] resolve.
-  void releaseGetQuote() => _gate?.complete();
-
   @override
   Future<Either<Failure, Quote>> getQuote() async {
-    final gate = _gate;
-    if (gate != null) {
-      await gate.future;
-      _gate = null;
-    }
     if (failRandom) {
       return left(const UnknownFailure(message: 'random draw failed'));
     }

@@ -117,17 +117,6 @@ class PadBloc extends Bloc<PadEvent, PadState> {
     }
 
     final kind = PadCalendar.tearKind(pageDay: newTop.day, today: today);
-    final revision = ++_revision;
-
-    // The top is promoted (and persisted) immediately so nothing reads a
-    // stale top/tearKind while the next under-page is still being drawn
-    // (contract G4 — the next content is drawn, but the *current* one must
-    // never lag behind what already tore away).
-    emit(
-      PadReady(top: newTop, under: newTop, tearKind: kind, revision: revision),
-    );
-    _persist(newTop);
-
     final underResult = await _drawUnder(newTop, kind, today);
     if (underResult.isLeft()) {
       _emitFailure(emit, underResult);
@@ -136,8 +125,14 @@ class PadBloc extends Bloc<PadEvent, PadState> {
     final under = _rightValue(underResult);
 
     emit(
-      PadReady(top: newTop, under: under, tearKind: kind, revision: revision),
+      PadReady(
+        top: newTop,
+        under: under,
+        tearKind: kind,
+        revision: ++_revision,
+      ),
     );
+    _persist(newTop);
   }
 
   void _onRestyled(PadRestyled event, Emitter<PadState> emit) {
