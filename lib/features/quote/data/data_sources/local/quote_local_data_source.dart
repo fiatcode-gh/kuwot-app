@@ -8,6 +8,7 @@ const _quotesAssetPath = 'assets/data/quotes.json';
 
 abstract class QuoteLocalDataSource {
   Future<QuoteModel> getRandomQuote();
+  Future<QuoteModel> getQuoteById(int id);
 }
 
 class QuoteLocalDataSourceImpl implements QuoteLocalDataSource {
@@ -41,5 +42,14 @@ class QuoteLocalDataSourceImpl implements QuoteLocalDataSource {
   Future<QuoteModel> getRandomQuote() async {
     final quotes = await _load();
     return quotes[_random.nextInt(quotes.length)];
+  }
+
+  @override
+  Future<QuoteModel> getQuoteById(int id) async {
+    final quotes = await _load();
+    if (id < 0 || id >= quotes.length) {
+      throw RangeError.index(id, quotes);
+    }
+    return quotes[id];
   }
 }

@@ -8,6 +8,5 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: AppUpdateRoute.page, initial: true),
     AutoRoute(page: QuoteRoute.page),
     AutoRoute(page: AppSettingsRoute.page),
-    AutoRoute(page: DonationRoute.page),
   ];
 }

@@ -1,50 +1,44 @@
 import 'package:flutter/painting.dart' show Color;
 import 'package:kuwot/features/quote/domain/entities/background_style.dart';
 
-/// Curated background palettes. All colours are mid-to-dark (luminance < 0.6,
-/// enforced by test) so white text over the scrim stays legible. Contrast comes
-/// from *hue*, not brightness — multi-hue 3-4 colour ramps give the gradient
-/// engines something to show while staying dark enough to read against.
+/// Curated header background palettes. Print-ink families only, no scrim —
+/// every colour must stay legible painted directly under [AppPalette.headerInk]
+/// text and against [AppPalette.dark]'s paper, so contrast comes from *hue and
+/// depth*, not a darkening overlay. Verified numerically (Ottosson OKLCH,
+/// WCAG contrast) against the G6 constraints, each with margin:
+/// - contrast ≥ 4.5 against `AppPalette.headerInk`;
+/// - contrast ≥ 1.4 against `AppPalette.dark.paper`;
+/// - OKLCH chroma ≥ 0.025 (never a flat near-black);
+/// - no OKLCH hue in [70°, 115°] (muddy ochre/olive);
+/// - no HSL hue in [250°, 335°] (the existing purple ban).
 const kPalettes = <Palette>[
-  // Vivid multi-hue ramps.
   Palette([
-    Color(0xFF3A0CA3),
-    Color(0xFF7209B7),
-    Color(0xFFF72585),
-  ]), // indigo→magenta
+    Color(0xFF6A1925),
+    Color(0xFF9D0208),
+    Color(0xFFC83F00),
+  ]), // oxblood→burnt orange
+  Palette([Color(0xFF1B4332), Color(0xFF2D6A4F), Color(0xFF2B7D59)]), // forest
   Palette([
-    Color(0xFF03045E),
-    Color(0xFF0077B6),
-    Color(0xFF00B4D8),
-  ]), // deep ocean
-  Palette([Color(0xFF641220), Color(0xFF9D0208), Color(0xFFE85D04)]), // ember
-  Palette([Color(0xFF240046), Color(0xFF5A189A), Color(0xFF9D4EDD)]), // grape
+    Color(0xFF173380),
+    Color(0xFF0075B4),
+    Color(0xFF1374A3),
+  ]), // ink blue deep
   Palette([
-    Color(0xFF10002B),
-    Color(0xFF3C096C),
-    Color(0xFF5A189A),
-    Color(0xFF7B2CBF),
-  ]), // twilight
-  Palette([
-    Color(0xFF012A4A),
+    Color(0xFF0E3A63),
     Color(0xFF2A6F97),
-    Color(0xFF468FAF),
-  ]), // steel blue
+    Color(0xFF2C7796),
+  ]), // ink blue steel
+  Palette([Color(0xFF34364C), Color(0xFF434C5E), Color(0xFF576079)]), // slate
   Palette([
-    Color(0xFF2B2D42),
-    Color(0xFF8D2E44),
-    Color(0xFFBC4749),
-  ]), // slate→rose
-  Palette([Color(0xFF1B4332), Color(0xFF2D6A4F), Color(0xFF40916C)]), // forest
-  // Refined two-tone keepers.
-  Palette([Color(0xFF1A2980), Color(0xFF26D0CE)]), // blue→cyan
-  Palette([Color(0xFF4B1248), Color(0xFFF0284A)]), // plum→red
-  Palette([Color(0xFF42275A), Color(0xFF734B6D)]), // mauve
-  Palette([Color(0xFF16222A), Color(0xFF3A6073)]), // slate blue
-  Palette([Color(0xFF373B44), Color(0xFF4286F4)]), // graphite→royal
-  Palette([
-    Color(0xFF0F2027),
-    Color(0xFF203A43),
+    Color(0xFF213C45),
     Color(0xFF2C5364),
-  ]), // deep teal
+    Color(0xFF396B7C),
+  ]), // teal deep
+  Palette([Color(0xFF1D2E85), Color(0xFF037C7B)]), // ink blue→teal
+  Palette([Color(0xFF343C4C), Color(0xFF2F5FC4)]), // slate→ink blue
+  Palette([
+    Color(0xFF603205),
+    Color(0xFF854408),
+    Color(0xFFA45519),
+  ]), // amber (replaces ochre)
 ];

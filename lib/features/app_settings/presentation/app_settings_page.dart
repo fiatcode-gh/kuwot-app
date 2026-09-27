@@ -1,8 +1,11 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
+import 'package:kuwot/core/presentation/theme/app_fonts.dart';
+import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kuwot/features/app_settings/presentation/widgets/about_widget.dart';
+import 'package:kuwot/features/in_app_purchase/presentation/tip_jar_section.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 @RoutePage()
@@ -16,19 +19,22 @@ class AppSettingsPage extends StatefulWidget {
 class _AppSettingsPageState extends State<AppSettingsPage> {
   @override
   Widget build(BuildContext context) {
-    final themeSetting = Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final palette = AppPalette.of(context);
+    final themeSetting = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('App Theme'),
-        DropdownButton<ThemeMode>(
-          items: const [
-            DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
-            DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-            DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+        Text('Theme', style: AppFonts.body(size: 16, color: palette.ink)),
+        const SizedBox(height: 8),
+        SegmentedButton<ThemeMode>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(value: ThemeMode.system, label: Text('System')),
+            ButtonSegment(value: ThemeMode.light, label: Text('Light')),
+            ButtonSegment(value: ThemeMode.dark, label: Text('Dark')),
           ],
-          value: context.watch<ThemeModeCubit>().state,
-          onChanged: (value) {
-            context.read<ThemeModeCubit>().setThemeMode(value!);
+          selected: {context.watch<ThemeModeCubit>().state},
+          onSelectionChanged: (selection) {
+            context.read<ThemeModeCubit>().setThemeMode(selection.first);
           },
         ),
       ],
@@ -37,18 +43,20 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
       child: FutureBuilder<PackageInfo>(
         future: PackageInfo.fromPlatform(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return Text(
-              'v${snapshot.data!.version} (${snapshot.data!.buildNumber})',
-            );
-          }
-          return const Text('...');
+          final label = snapshot.hasData
+              ? 'v${snapshot.data!.version} (${snapshot.data!.buildNumber})'
+              : '...';
+          return Text(
+            label,
+            style: AppFonts.label(size: 12, color: palette.inkMuted),
+          );
         },
       ),
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('App Settings')),
+      backgroundColor: palette.desk,
+      appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         top: false,
         child: ListView(
@@ -56,9 +64,21 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
           children: [
             themeSetting,
             const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: const TipJarSection(),
+              ),
+            ),
+            const SizedBox(height: 20),
             appVersion,
             const SizedBox(height: 20),
-            const AboutWidget(),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: const AboutWidget(),
+              ),
+            ),
           ],
         ),
       ),

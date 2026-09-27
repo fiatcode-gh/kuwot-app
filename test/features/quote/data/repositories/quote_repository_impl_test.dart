@@ -56,4 +56,35 @@ void main() {
     expect(result.isLeft(), isTrue);
     expect(result.getLeft().toNullable(), isA<UnknownFailure>());
   });
+
+  test('getQuoteById maps a model to a Right(Quote)', () async {
+    // arrange
+    when(() => dataSource.getQuoteById(1)).thenAnswer(
+      (_) async => const QuoteModel(id: 1, text: 'Body', author: 'Author'),
+    );
+
+    // act
+    final result = await repository.getQuoteById(1);
+
+    // assert
+    expect(
+      result.getRight().toNullable(),
+      const Quote(id: 1, author: 'Author', body: 'Body'),
+    );
+  });
+
+  test(
+    'getQuoteById returns Left(Failure) when the data source throws',
+    () async {
+      // arrange
+      when(() => dataSource.getQuoteById(5))
+          .thenThrow(RangeError.range(5, 0, 1));
+
+      // act
+      final result = await repository.getQuoteById(5);
+
+      // assert
+      expect(result.isLeft(), isTrue);
+    },
+  );
 }

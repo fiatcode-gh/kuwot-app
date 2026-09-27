@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:kuwot/core/presentation/theme/app_fonts.dart';
+import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class AboutWidget extends StatelessWidget {
@@ -6,20 +8,24 @@ class AboutWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Links & Credits', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          'Links & Credits',
+          style: AppFonts.label(size: 12, color: palette.inkMuted),
+        ),
         const Divider(),
         _buildCreditItem(
-          context,
+          palette: palette,
           title: 'Kuwot App Source',
           description: 'Source code for this app. Any suggestions or contributions are welcome.',
           url: 'https://github.com/dhemasnurjaya/kuwot-app',
         ),
         _buildCreditItem(
-          context,
+          palette: palette,
           title: 'Quotes-500K',
           description: 'This app ships a curated subset of the quotes dataset by Shivali Goel, Rishi Madhok, Shweta Garg. Initially created for "Proposing Contextually Relevant Quotes for Images" journal.',
           url: 'https://github.com/ShivaliGoel/Quotes-500K',
@@ -28,8 +34,8 @@ class AboutWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCreditItem(
-    BuildContext context, {
+  Widget _buildCreditItem({
+    required AppPalette palette,
     required String title,
     required String description,
     required String url,
@@ -37,23 +43,39 @@ class AboutWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        Text(description),
-        const SizedBox(height: 4),
-        GestureDetector(
-          child: Text(
-            url,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              decoration: TextDecoration.underline,
-              color: Colors.indigoAccent,
-              decorationColor: Colors.indigoAccent,
-            ),
+        Text(
+          title,
+          style: TextStyle(
+            fontFamily: AppFonts.frauncesFamily,
+            fontSize: 16,
+            color: palette.ink,
+            fontVariations: const [FontVariation('wght', 600)],
           ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: AppFonts.body(size: 14, color: palette.inkMuted),
+        ),
+        const SizedBox(height: 4),
+        InkWell(
           onTap: () async {
             await launchUrlString(url);
           },
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                url,
+                style: AppFonts.body(size: 14, color: palette.ink).copyWith(
+                  decoration: TextDecoration.underline,
+                  decorationColor: palette.ink,
+                ),
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: 16),
       ],
     );
   }

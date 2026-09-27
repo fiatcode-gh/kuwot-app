@@ -15,10 +15,8 @@ class ErrorRetrySnackbar {
     return SnackBar(
       behavior: SnackBarBehavior.floating,
       duration: const Duration(days: 1),
-      backgroundColor: Colors.red[600],
       content: Text(errorMessage),
       action: SnackBarAction(
-        textColor: Colors.white,
         label: 'RETRY',
         onPressed: () {
           onRetry();

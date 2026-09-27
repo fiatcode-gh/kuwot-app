@@ -17,13 +17,19 @@ import 'package:kuwot/features/in_app_purchase/domain/use_case/purchase_consumab
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/purchase_details_cubit.dart';
 import 'package:kuwot/features/in_app_update/presentation/bloc/in_app_update_bloc.dart';
+import 'package:kuwot/features/quote/data/data_sources/local/pad_snapshot_config.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_source.dart';
+import 'package:kuwot/features/quote/data/repositories/pad_repository_impl.dart';
 import 'package:kuwot/features/quote/data/repositories/quote_repository_impl.dart';
+import 'package:kuwot/features/quote/domain/entities/pad_snapshot.dart';
+import 'package:kuwot/features/quote/domain/repositories/pad_repository.dart';
 import 'package:kuwot/features/quote/domain/repositories/quote_repository.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
 import 'package:kuwot/features/quote/domain/use_cases/get_quote.dart';
-import 'package:kuwot/features/quote/presentation/bloc/background_bloc.dart';
-import 'package:kuwot/features/quote/presentation/bloc/quote_bloc.dart';
+import 'package:kuwot/features/quote/domain/use_cases/get_quote_by_id.dart';
+import 'package:kuwot/features/quote/domain/use_cases/load_pad_snapshot.dart';
+import 'package:kuwot/features/quote/domain/use_cases/save_pad_snapshot.dart';
+import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -43,6 +49,10 @@ void setup() {
     () => ThemeModeConfig(sharedPreferences: getIt()),
     dependsOn: [SharedPreferences],
   );
+  getIt.registerSingletonWithDependencies<Config<PadSnapshot>>(
+    () => PadSnapshotConfig(sharedPreferences: getIt()),
+    dependsOn: [SharedPreferences],
+  );
 
   // data sources
   getIt.registerLazySingleton<QuoteLocalDataSource>(
@@ -56,12 +66,18 @@ void setup() {
   getIt.registerLazySingleton<QuoteRepository>(
     () => QuoteRepositoryImpl(localDataSource: getIt()),
   );
+  getIt.registerLazySingleton<PadRepository>(
+    () => PadRepositoryImpl(config: getIt()),
+  );
   getIt.registerLazySingleton<InAppPurchaseRepository>(
     () => InAppPurchaseRepositoryImpl(inAppPurchaseDataSource: getIt()),
   );
 
   // use cases
   getIt.registerLazySingleton<GetQuote>(() => GetQuote(getIt()));
+  getIt.registerLazySingleton<GetQuoteById>(() => GetQuoteById(getIt()));
+  getIt.registerLazySingleton<LoadPadSnapshot>(() => LoadPadSnapshot(getIt()));
+  getIt.registerLazySingleton<SavePadSnapshot>(() => SavePadSnapshot(getIt()));
   getIt.registerLazySingleton<BackgroundGenerator>(
     () => const BackgroundGenerator(),
   );
@@ -93,9 +109,15 @@ void setup() {
   getIt.registerLazySingleton<PurchaseDetailsCubit>(
     () => PurchaseDetailsCubit(getIt()),
   );
-  getIt.registerFactory<QuoteBloc>(() => QuoteBloc(getQuote: getIt()));
-  getIt.registerFactory<BackgroundBloc>(
-    () => BackgroundBloc(generator: getIt()),
+  getIt.registerFactory<PadBloc>(
+    () => PadBloc(
+      getQuote: getIt(),
+      getQuoteById: getIt(),
+      loadPadSnapshot: getIt(),
+      savePadSnapshot: getIt(),
+      generator: getIt(),
+      time: getIt(),
+    ),
   );
 
   // others
@@ -114,8 +136,7 @@ MultiBlocProvider getMultiBlocProvider({required Widget child}) {
       BlocProvider<InAppUpdateBloc>(create: (context) => getIt()),
       BlocProvider<InAppPurchaseBloc>(create: (context) => getIt()),
       BlocProvider<PurchaseDetailsCubit>(create: (context) => getIt()),
-      BlocProvider<QuoteBloc>(create: (context) => getIt()),
-      BlocProvider<BackgroundBloc>(create: (context) => getIt()),
+      BlocProvider<PadBloc>(create: (context) => getIt()),
     ],
     child: child,
   );
