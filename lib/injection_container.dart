@@ -18,6 +18,7 @@ import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/purchase_details_cubit.dart';
 import 'package:kuwot/features/in_app_update/presentation/bloc/in_app_update_bloc.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/pad_snapshot_config.dart';
+import 'package:kuwot/features/quote/data/data_sources/local/quote_groups_config.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_source.dart';
 import 'package:kuwot/features/quote/data/repositories/pad_repository_impl.dart';
 import 'package:kuwot/features/quote/data/repositories/quote_repository_impl.dart';
@@ -31,6 +32,7 @@ import 'package:kuwot/features/quote/domain/use_cases/get_quote_by_id.dart';
 import 'package:kuwot/features/quote/domain/use_cases/load_pad_snapshot.dart';
 import 'package:kuwot/features/quote/domain/use_cases/save_pad_snapshot.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
+import 'package:kuwot/features/quote/presentation/bloc/quote_groups_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -52,6 +54,10 @@ void setup() {
   );
   getIt.registerSingletonWithDependencies<Config<PadSnapshot>>(
     () => PadSnapshotConfig(sharedPreferences: getIt()),
+    dependsOn: [SharedPreferences],
+  );
+  getIt.registerSingletonWithDependencies<Config<Set<QuoteGroup>>>(
+    () => QuoteGroupsConfig(sharedPreferences: getIt()),
     dependsOn: [SharedPreferences],
   );
 
@@ -98,6 +104,13 @@ void setup() {
       initialThemeMode: initialThemeMode ?? ThemeMode.system,
     );
   }, dependsOn: [SharedPreferences, Config<ThemeMode>]);
+  getIt.registerSingletonAsync<QuoteGroupsCubit>(() async {
+    final initial = await getIt<Config<Set<QuoteGroup>>>().get();
+    return QuoteGroupsCubit(
+      config: getIt(),
+      initialGroups: initial ?? QuoteGroup.values.toSet(),
+    );
+  }, dependsOn: [SharedPreferences, Config<Set<QuoteGroup>>]);
   getIt.registerLazySingleton<InAppUpdateBloc>(
     () => InAppUpdateBloc(appUpdater: getIt()),
   );
@@ -135,6 +148,7 @@ MultiBlocProvider getMultiBlocProvider({required Widget child}) {
   return MultiBlocProvider(
     providers: [
       BlocProvider<ThemeModeCubit>(create: (context) => getIt()),
+      BlocProvider<QuoteGroupsCubit>(create: (context) => getIt()),
       BlocProvider<InAppUpdateBloc>(create: (context) => getIt()),
       BlocProvider<InAppPurchaseBloc>(create: (context) => getIt()),
       BlocProvider<PurchaseDetailsCubit>(create: (context) => getIt()),
