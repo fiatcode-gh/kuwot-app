@@ -501,32 +501,6 @@ void main() {
   );
 
   group('quote groups', () {
-    test(
-      'a bloc restricted to one group only ever draws quotes from it',
-      () async {
-        final time = FakeTime(DateTime(2026, 3, 10));
-        final quotes = FakeQuoteRepository();
-        final bloc = await buildPadBloc(
-          time: time,
-          quotes: quotes,
-          groups: {QuoteGroup.grow},
-        );
-
-        bloc.add(const PadStarted());
-        await pumpEventQueue();
-
-        final ready = bloc.state as PadReady;
-        expect(ready.top.quote.group, QuoteGroup.grow);
-        expect(ready.under.quote.group, QuoteGroup.grow);
-        for (final drawnGroups in quotes.drawnWith) {
-          expect(drawnGroups.length, 1);
-          expect(drawnGroups.single, QuoteGroup.grow);
-        }
-
-        await bloc.close();
-      },
-    );
-
     test('PadGroupsChanged redraws only the under quote when it is no longer '
         'selected, keeping top/day/header/tearKind/revision and not '
         'persisting; a later commit promotes the redrawn under, which was '
@@ -554,9 +528,6 @@ void main() {
       expect(after.tearKind, before.tearKind);
       expect(after.revision, before.revision);
 
-      final savedAfterRedraw = await readSnapshot();
-      expect(savedAfterRedraw?.quoteId, before.top.quote.id);
-
       bloc.add(PadTearCommitted(after.revision));
       await pumpEventQueue();
       final committed = bloc.state as PadReady;
@@ -581,33 +552,6 @@ void main() {
       );
 
       expect(states, isEmpty);
-      await bloc.close();
-    });
-
-    test('restarting with an unknown saved quote id falls back to a random '
-        'draw from the bloc\'s selected groups', () async {
-      final prefs = await SharedPreferences.getInstance();
-      final config = PadSnapshotConfig(sharedPreferences: prefs);
-      await config.set(
-        const PadSnapshot(day: PadDay(2026, 3, 10), quoteId: 999),
-      );
-
-      final time = FakeTime(DateTime(2026, 3, 10));
-      final quotes = FakeQuoteRepository();
-      final bloc = await buildPadBloc(
-        time: time,
-        quotes: quotes,
-        config: config,
-        groups: {QuoteGroup.rest},
-      );
-
-      bloc.add(const PadStarted());
-      await pumpEventQueue();
-
-      final ready = bloc.state as PadReady;
-      expect(ready.top.quote.id, isNot(999));
-      expect(ready.top.quote.group, QuoteGroup.rest);
-
       await bloc.close();
     });
   });

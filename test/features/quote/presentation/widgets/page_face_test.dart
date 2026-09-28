@@ -183,55 +183,54 @@ void main() {
         );
       }
 
-      for (final quote in [kLongestQuote]) {
-        testWidgets('SharePageCard box (360x640), quote ${quote.id}', (
+      const quote = kLongestQuote;
+      testWidgets('SharePageCard box (360x640), quote ${quote.id}', (
+        tester,
+      ) async {
+        final page = PadPage(day: _day, quote: quote, header: style);
+        await expectMeasurementPinsRender(
           tester,
-        ) async {
-          final page = PadPage(day: _day, quote: quote, header: style);
-          await expectMeasurementPinsRender(
-            tester,
-            padTestApp(
-              Center(
-                child: SharePageCard(
-                  page: page,
-                  locale: const Locale('en', 'US'),
-                ),
+          padTestApp(
+            Center(
+              child: SharePageCard(
+                page: page,
+                locale: const Locale('en', 'US'),
               ),
             ),
-            quote,
-          );
-        });
+          ),
+          quote,
+        );
+      });
 
-        testWidgets('360x640 phone page, quote ${quote.id}', (tester) async {
-          final page = PadPage(day: _day, quote: quote, header: style);
-          await expectMeasurementPinsRender(
-            tester,
-            padTestApp(
-              SizedBox(
-                width: 360,
-                height: 640,
-                child: PageFace(page: page, locale: const Locale('en', 'US')),
-              ),
+      testWidgets('360x640 phone page, quote ${quote.id}', (tester) async {
+        final page = PadPage(day: _day, quote: quote, header: style);
+        await expectMeasurementPinsRender(
+          tester,
+          padTestApp(
+            SizedBox(
+              width: 360,
+              height: 640,
+              child: PageFace(page: page, locale: const Locale('en', 'US')),
             ),
-            quote,
-          );
-        });
+          ),
+          quote,
+        );
+      });
 
-        testWidgets('412x915 phone page, quote ${quote.id}', (tester) async {
-          final page = PadPage(day: _day, quote: quote, header: style);
-          await expectMeasurementPinsRender(
-            tester,
-            padTestApp(
-              SizedBox(
-                width: 412,
-                height: 915,
-                child: PageFace(page: page, locale: const Locale('en', 'US')),
-              ),
+      testWidgets('412x915 phone page, quote ${quote.id}', (tester) async {
+        final page = PadPage(day: _day, quote: quote, header: style);
+        await expectMeasurementPinsRender(
+          tester,
+          padTestApp(
+            SizedBox(
+              width: 412,
+              height: 915,
+              child: PageFace(page: page, locale: const Locale('en', 'US')),
             ),
-            quote,
-          );
-        });
-      }
+          ),
+          quote,
+        );
+      });
     },
   );
 }

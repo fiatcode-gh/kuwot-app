@@ -10,7 +10,11 @@ class QuoteGroupsCubit extends Cubit<Set<QuoteGroup>> {
   QuoteGroupsCubit({
     required this.config,
     required Set<QuoteGroup> initialGroups,
-  }) : super(Set.unmodifiable(initialGroups));
+  }) : assert(
+         initialGroups.isNotEmpty,
+         'at least one quote group must be selected',
+       ),
+       super(Set.unmodifiable(initialGroups));
 
   /// Quote group selection config
   final Config<Set<QuoteGroup>> config;
