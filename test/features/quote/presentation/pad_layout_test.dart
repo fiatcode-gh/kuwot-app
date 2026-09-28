@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
+import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
+import 'package:kuwot/features/quote/presentation/bloc/quote_groups_cubit.dart';
 import 'package:kuwot/features/quote/presentation/quote_page.dart';
 import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
 import 'package:kuwot/features/quote/presentation/widgets/control_dock.dart';
@@ -12,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../helpers/load_app_fonts.dart';
 import '../../../helpers/pad_fakes.dart';
 import '../../../helpers/quote_fixtures.dart';
+import '../../../helpers/settings_fakes.dart';
 
 /// Pumps a fresh [QuotePage] at [size] and [textScale] with [quote] as the
 /// first drawn (and therefore top) quote, and returns once the first load
@@ -42,7 +46,18 @@ Future<void> _pumpAt(
           final mediaQuery = MediaQuery.of(context);
           return MediaQuery(
             data: mediaQuery.copyWith(textScaler: TextScaler.linear(textScale)),
-            child: BlocProvider.value(value: bloc, child: const QuotePage()),
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<PadBloc>.value(value: bloc),
+                BlocProvider<QuoteGroupsCubit>(
+                  create: (_) => QuoteGroupsCubit(
+                    config: FakeQuoteGroupsConfig(),
+                    initialGroups: QuoteGroup.values.toSet(),
+                  ),
+                ),
+              ],
+              child: const QuotePage(),
+            ),
           );
         },
       ),

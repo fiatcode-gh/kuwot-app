@@ -7,8 +7,10 @@ import 'package:kuwot/core/presentation/error_retry_snackbar.dart';
 import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:kuwot/core/router/app_router.gr.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_page.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
+import 'package:kuwot/features/quote/presentation/bloc/quote_groups_cubit.dart';
 import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
 import 'package:kuwot/features/quote/presentation/widgets/control_dock.dart';
 import 'package:kuwot/features/quote/presentation/widgets/share_page_card.dart';
@@ -77,82 +79,85 @@ class _QuotePageState extends State<QuotePage> {
     final maxWidth = isTablet ? 560.0 : 420.0;
     final locale = View.of(context).platformDispatcher.locale;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: brightness == Brightness.dark
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: palette.desk,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: maxWidth,
-                      maxHeight: isTabletLandscape
-                          ? maxWidth / 0.58
-                          : double.infinity,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                      child: BlocConsumer<PadBloc, PadState>(
-                        listener: (context, state) {
-                          if (state is PadFailed) {
-                            ErrorRetrySnackbar.show(
-                              context,
-                              errorMessage: state.message,
-                              onRetry: () => _bloc.add(const PadStarted()),
+    return BlocListener<QuoteGroupsCubit, Set<QuoteGroup>>(
+      listener: (context, groups) => _bloc.add(PadGroupsChanged(groups)),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
+        child: Scaffold(
+          backgroundColor: palette.desk,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: maxWidth,
+                        maxHeight: isTabletLandscape
+                            ? maxWidth / 0.58
+                            : double.infinity,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        child: BlocConsumer<PadBloc, PadState>(
+                          listener: (context, state) {
+                            if (state is PadFailed) {
+                              ErrorRetrySnackbar.show(
+                                context,
+                                errorMessage: state.message,
+                                onRetry: () => _bloc.add(const PadStarted()),
+                              );
+                            }
+                          },
+                          builder: (context, state) {
+                            if (state is PadReady) {
+                              return CalendarPad(
+                                key: _padKey,
+                                top: state.top,
+                                under: state.under,
+                                tearKind: state.tearKind,
+                                revision: state.revision,
+                                onTornAway: () =>
+                                    _bloc.add(PadTearCommitted(state.revision)),
+                                locale: locale,
+                              );
+                            }
+                            return PadFrame(
+                              page: ColoredBox(color: palette.paper),
                             );
-                          }
-                        },
-                        builder: (context, state) {
-                          if (state is PadReady) {
-                            return CalendarPad(
-                              key: _padKey,
-                              top: state.top,
-                              under: state.under,
-                              tearKind: state.tearKind,
-                              revision: state.revision,
-                              onTornAway: () =>
-                                  _bloc.add(PadTearCommitted(state.revision)),
-                              locale: locale,
-                            );
-                          }
-                          return PadFrame(
-                            page: ColoredBox(color: palette.paper),
-                          );
-                        },
+                          },
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: maxWidth),
-                child: BlocBuilder<PadBloc, PadState>(
-                  builder: (context, state) {
-                    final ready = state is PadReady ? state : null;
-                    return ControlDock(
-                      tearKind: ready?.tearKind,
-                      onTear: ready == null
-                          ? null
-                          : () => _padKey.currentState?.tearAway(),
-                      onRestyle: ready?.tearKind == TearKind.quote
-                          ? () => _bloc.add(const PadRestyled())
-                          : null,
-                      onShare: ready == null || _sharing
-                          ? null
-                          : () => _share(ready.top, locale),
-                      onSettings: () =>
-                          context.router.push(const AppSettingsRoute()),
-                    );
-                  },
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: BlocBuilder<PadBloc, PadState>(
+                    builder: (context, state) {
+                      final ready = state is PadReady ? state : null;
+                      return ControlDock(
+                        tearKind: ready?.tearKind,
+                        onTear: ready == null
+                            ? null
+                            : () => _padKey.currentState?.tearAway(),
+                        onRestyle: ready?.tearKind == TearKind.quote
+                            ? () => _bloc.add(const PadRestyled())
+                            : null,
+                        onShare: ready == null || _sharing
+                            ? null
+                            : () => _share(ready.top, locale),
+                        onSettings: () =>
+                            context.router.push(const AppSettingsRoute()),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -131,7 +131,7 @@ void setup() {
       savePadSnapshot: getIt(),
       generator: getIt(),
       time: getIt(),
-      groups: QuoteGroup.values.toSet(),
+      groups: getIt<QuoteGroupsCubit>().state,
     ),
   );
 

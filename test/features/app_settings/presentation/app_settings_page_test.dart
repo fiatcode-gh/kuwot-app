@@ -7,6 +7,8 @@ import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/features/app_settings/presentation/app_settings_page.dart';
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
+import 'package:kuwot/features/quote/presentation/bloc/quote_groups_cubit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -24,16 +26,26 @@ final _sampleProducts = [
   ),
 ];
 
-/// Pumps [AppSettingsPage] at 360x640 with a real [ThemeModeCubit] and a
-/// mocked [InAppPurchaseBloc] fixed at [purchaseState] (or replaying
-/// [stream], defaulting to empty, on top of it), and waits for the first
-/// load to settle. Returns the mock bloc so callers can verify dispatches.
-Future<MockInAppPurchaseBloc> _pumpSettings(
+/// Pumps [AppSettingsPage] at 360x640 with a real [ThemeModeCubit], a real
+/// [QuoteGroupsCubit] seeded with [initialGroups] (defaulting to every
+/// group) over a [FakeQuoteGroupsConfig], and a mocked [InAppPurchaseBloc]
+/// fixed at [purchaseState] (or replaying [stream], defaulting to empty, on
+/// top of it), and waits for the first load to settle. Returns the mock
+/// bloc, the cubit and its fake config so callers can make assertions.
+Future<
+  ({
+    MockInAppPurchaseBloc purchaseBloc,
+    QuoteGroupsCubit cubit,
+    FakeQuoteGroupsConfig config,
+  })
+>
+_pumpSettings(
   WidgetTester tester, {
   required ThemeData theme,
   required InAppPurchaseState purchaseState,
   double textScale = 1.0,
   Stream<InAppPurchaseState>? stream,
+  Set<QuoteGroup>? initialGroups,
 }) async {
   tester.view.physicalSize = const Size(360, 640);
   tester.view.devicePixelRatio = 1;
@@ -45,6 +57,11 @@ Future<MockInAppPurchaseBloc> _pumpSettings(
     purchaseBloc,
     stream ?? const Stream<InAppPurchaseState>.empty(),
     initialState: purchaseState,
+  );
+  final config = FakeQuoteGroupsConfig();
+  final cubit = QuoteGroupsCubit(
+    config: config,
+    initialGroups: initialGroups ?? QuoteGroup.values.toSet(),
   );
 
   await tester.pumpWidget(
@@ -63,6 +80,7 @@ Future<MockInAppPurchaseBloc> _pumpSettings(
                     initialThemeMode: ThemeMode.system,
                   ),
                 ),
+                BlocProvider<QuoteGroupsCubit>.value(value: cubit),
                 BlocProvider<InAppPurchaseBloc>.value(value: purchaseBloc),
               ],
               child: const AppSettingsPage(),
@@ -73,7 +91,7 @@ Future<MockInAppPurchaseBloc> _pumpSettings(
     ),
   );
   await tester.pumpAndSettle();
-  return purchaseBloc;
+  return (purchaseBloc: purchaseBloc, cubit: cubit, config: config);
 }
 
 void main() {
@@ -154,7 +172,7 @@ void main() {
       'Getting to Loaded on first open, and dispatches the load exactly once', (
     tester,
   ) async {
-    final purchaseBloc = await _pumpSettings(
+    final harness = await _pumpSettings(
       tester,
       theme: lightTheme,
       purchaseState: const InAppPurchaseInitialState(),
@@ -165,11 +183,83 @@ void main() {
     );
 
     expect(find.text('Small Coffee'), findsOneWidget);
-    verify(() => purchaseBloc.add(const GetConsumableProductsEvent()))
+    verify(() => harness.purchaseBloc.add(const GetConsumableProductsEvent()))
         .called(1);
   });
 
-  testWidgets('sections appear in order: Theme, Tip jar, About', (
+  group('Quote groups', () {
+    testWidgets('lists the 12 groups in order', (tester) async {
+      await _pumpSettings(
+        tester,
+        theme: lightTheme,
+        purchaseState: const ConsumableProductsLoadedState([]),
+      );
+
+      final chips = tester.widgetList<FilterChip>(find.byType(FilterChip));
+      final labels = chips.map((chip) => (chip.label as Text).data).toList();
+
+      expect(labels, [
+        'Perspective',
+        'Keep going',
+        'Heavy days',
+        'Do the work',
+        'Begin again',
+        'Breathe',
+        'Grow',
+        'Courage',
+        'Small joys',
+        'People',
+        'Believe in yourself',
+        'Rest',
+      ]);
+      expect(chips.every((chip) => chip.selected), isTrue);
+    });
+
+    testWidgets('tapping the Rest chip turns it off', (tester) async {
+      final harness = await _pumpSettings(
+        tester,
+        theme: lightTheme,
+        purchaseState: const ConsumableProductsLoadedState([]),
+      );
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Rest'));
+      await tester.pumpAndSettle();
+
+      final chip = tester.widget<FilterChip>(
+        find.widgetWithText(FilterChip, 'Rest'),
+      );
+      expect(chip.selected, isFalse);
+      expect(harness.cubit.state.contains(QuoteGroup.rest), isFalse);
+      expect(harness.config.saved?.contains(QuoteGroup.rest), isFalse);
+    });
+
+    testWidgets('the only selected group chip cannot be turned off', (
+      tester,
+    ) async {
+      final harness = await _pumpSettings(
+        tester,
+        theme: lightTheme,
+        purchaseState: const ConsumableProductsLoadedState([]),
+        initialGroups: const {QuoteGroup.rest},
+      );
+
+      final chip = tester.widget<FilterChip>(
+        find.widgetWithText(FilterChip, 'Rest'),
+      );
+      expect(chip.onSelected, isNull);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Rest'));
+      await tester.pumpAndSettle();
+
+      expect(harness.cubit.state, {QuoteGroup.rest});
+      final chipAfter = tester.widget<FilterChip>(
+        find.widgetWithText(FilterChip, 'Rest'),
+      );
+      expect(chipAfter.selected, isTrue);
+    });
+  });
+
+  testWidgets('sections appear in order: Theme, Quote groups, Tip jar, About', (
     tester,
   ) async {
     await _pumpSettings(
@@ -178,11 +268,22 @@ void main() {
       purchaseState: const ConsumableProductsLoadedState([]),
     );
 
-    final themeY = tester.getTopLeft(find.text('Theme')).dy;
-    final tipJarY = tester.getTopLeft(find.text('Tip jar')).dy;
-    final aboutY = tester.getTopLeft(find.text('Links & Credits')).dy;
+    // The list is taller than the 640-tall viewport, so 'Links & Credits'
+    // isn't built until scrolled into view. `dy` alone isn't comparable
+    // across scroll positions, so add the Scrollable's current offset to
+    // get each section's position in the (scroll-invariant) list content.
+    final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
+    double contentY(Finder finder) =>
+        tester.getTopLeft(finder).dy + scrollable.position.pixels;
 
-    expect(themeY, lessThan(tipJarY));
+    final themeY = contentY(find.text('Theme'));
+    final quoteGroupsY = contentY(find.text('Quote groups'));
+    final tipJarY = contentY(find.text('Tip jar'));
+    expect(themeY, lessThan(quoteGroupsY));
+    expect(quoteGroupsY, lessThan(tipJarY));
+
+    await tester.scrollUntilVisible(find.text('Links & Credits'), 200);
+    final aboutY = contentY(find.text('Links & Credits'));
     expect(tipJarY, lessThan(aboutY));
   });
 }
