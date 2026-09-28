@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 import 'package:kuwot/features/quote/data/models/quote_model.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 
 const _quotesAssetPath = 'assets/data/quotes.json';
 
@@ -30,9 +31,11 @@ class QuoteLocalDataSourceImpl implements QuoteLocalDataSource {
     final quotes = <QuoteModel>[];
     for (var i = 0; i < list.length; i++) {
       final map = list[i] as Map<String, dynamic>;
-      quotes.add(
-        QuoteModel(id: i, text: map['q'] as String, author: map['a'] as String),
-      );
+      final groupId = map['group'] as String;
+      final group =
+          QuoteGroup.tryParse(groupId) ??
+          (throw FormatException('Unknown quote group', groupId));
+      quotes.add(QuoteModel(id: i, text: map['text'] as String, group: group));
     }
     _cache = quotes;
     return quotes;

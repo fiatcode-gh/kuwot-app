@@ -5,6 +5,7 @@ import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_so
 import 'package:kuwot/features/quote/data/models/quote_model.dart';
 import 'package:kuwot/features/quote/data/repositories/quote_repository_impl.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 
 class _MockLocalDataSource extends Mock implements QuoteLocalDataSource {}
 
@@ -20,7 +21,8 @@ void main() {
   test('getQuote maps a model to a Right(Quote)', () async {
     // arrange
     when(() => dataSource.getRandomQuote()).thenAnswer(
-      (_) async => const QuoteModel(id: 3, text: 'Body', author: 'Author'),
+      (_) async =>
+          const QuoteModel(id: 3, text: 'Body', group: QuoteGroup.grow),
     );
 
     // act
@@ -29,7 +31,7 @@ void main() {
     // assert
     expect(
       result.getRight().toNullable(),
-      const Quote(id: 3, author: 'Author', body: 'Body'),
+      const Quote(id: 3, body: 'Body', group: QuoteGroup.grow),
     );
   });
 
@@ -60,7 +62,8 @@ void main() {
   test('getQuoteById maps a model to a Right(Quote)', () async {
     // arrange
     when(() => dataSource.getQuoteById(1)).thenAnswer(
-      (_) async => const QuoteModel(id: 1, text: 'Body', author: 'Author'),
+      (_) async =>
+          const QuoteModel(id: 1, text: 'Body', group: QuoteGroup.grow),
     );
 
     // act
@@ -69,7 +72,7 @@ void main() {
     // assert
     expect(
       result.getRight().toNullable(),
-      const Quote(id: 1, author: 'Author', body: 'Body'),
+      const Quote(id: 1, body: 'Body', group: QuoteGroup.grow),
     );
   });
 

@@ -6,6 +6,7 @@ import 'package:kuwot/features/quote/data/data_sources/local/pad_snapshot_config
 import 'package:kuwot/features/quote/data/repositories/pad_repository_impl.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_snapshot.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/repositories/quote_repository.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
 import 'package:kuwot/features/quote/domain/use_cases/get_quote.dart';
@@ -57,7 +58,7 @@ class FakeQuoteRepository implements QuoteRepository {
       quote = _queue.removeAt(0);
     } else {
       final id = _nextId++;
-      quote = Quote(id: id, author: 'Author $id', body: 'Quote $id');
+      quote = Quote(id: id, body: 'Quote $id', group: QuoteGroup.perspective);
     }
     _known[quote.id] = quote;
     return right(quote);

@@ -64,42 +64,36 @@ void main() {
     '1280x800': Size(1280, 800),
   };
   final themes = {'light': lightTheme, 'dark': darkTheme};
-  const quotes = {
-    'longest body': kLongestBodyQuote,
-    'longest author': kLongestAuthorQuote,
-  };
 
   for (final sizeEntry in sizes.entries) {
     for (final themeEntry in themes.entries) {
-      for (final quoteEntry in quotes.entries) {
-        testWidgets(
-          '${sizeEntry.key} ${themeEntry.key} ${quoteEntry.key} does not '
-          'overflow',
-          (tester) async {
-            await _pumpAt(
-              tester,
-              size: sizeEntry.value,
-              theme: themeEntry.value,
-              quote: quoteEntry.value,
-            );
+      testWidgets(
+        '${sizeEntry.key} ${themeEntry.key} with the longest quote does not '
+        'overflow',
+        (tester) async {
+          await _pumpAt(
+            tester,
+            size: sizeEntry.value,
+            theme: themeEntry.value,
+            quote: kLongestQuote,
+          );
 
-            expect(tester.takeException(), isNull);
-            if (sizeEntry.key != '360x640') {
-              expect(find.byType(SingleChildScrollView), findsNothing);
-            }
-          },
-        );
-      }
+          expect(tester.takeException(), isNull);
+          if (sizeEntry.key != '360x640') {
+            expect(find.byType(SingleChildScrollView), findsNothing);
+          }
+        },
+      );
     }
   }
 
-  testWidgets('411x914 at 2x text scale with the longest author quote does not '
+  testWidgets('411x914 at 2x text scale with the longest quote does not '
       'overflow (scroll fallback allowed)', (tester) async {
     await _pumpAt(
       tester,
       size: const Size(411, 914),
       theme: lightTheme,
-      quote: kLongestAuthorQuote,
+      quote: kLongestQuote,
       textScale: 2.0,
     );
 
@@ -116,7 +110,7 @@ void main() {
             tester,
             size: sizeEntry.value,
             theme: lightTheme,
-            quote: kLongestBodyQuote,
+            quote: kLongestQuote,
           );
 
           final padBottom = tester
@@ -139,7 +133,7 @@ void main() {
           tester,
           size: const Size(800, 1280),
           theme: lightTheme,
-          quote: kLongestBodyQuote,
+          quote: kLongestQuote,
         );
 
         final bindingTop = tester

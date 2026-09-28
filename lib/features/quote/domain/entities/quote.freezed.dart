@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Quote {
 
- int get id; String get author; String get body;
+ int get id; String get body; QuoteGroup get group;
 /// Create a copy of Quote
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $QuoteCopyWith<Quote> get copyWith => _$QuoteCopyWithImpl<Quote>(this as Quote, 
 @override
 bool operator ==(Object other) {
   final _this = this as Quote;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Quote&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.author, _this.author) || other.author == _this.author)&&(identical(other.body, _this.body) || other.body == _this.body));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Quote&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.body, _this.body) || other.body == _this.body)&&(identical(other.group, _this.group) || other.group == _this.group));
 }
 
 
 @override
 int get hashCode {
   final _this = this as Quote;
-  return Object.hash(runtimeType,_this.id,_this.author,_this.body);
+  return Object.hash(runtimeType,_this.id,_this.body,_this.group);
 }
 
 @override
 String toString() {
   final _this = this as Quote;
-  return 'Quote(id: ${_this.id}, author: ${_this.author}, body: ${_this.body})';
+  return 'Quote(id: ${_this.id}, body: ${_this.body}, group: ${_this.group})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $QuoteCopyWith<$Res>  {
   factory $QuoteCopyWith(Quote value, $Res Function(Quote) _then) = _$QuoteCopyWithImpl;
 @useResult
 $Res call({
- int id, String author, String body
+ int id, String body, QuoteGroup group
 });
 
 
@@ -68,12 +68,12 @@ class _$QuoteCopyWithImpl<$Res>
 
 /// Create a copy of Quote
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? author = null,Object? body = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? body = null,Object? group = null,}) {
   return _then(Quote(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
-as String,
+as int,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
+as String,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as QuoteGroup,
   ));
 }
 
@@ -158,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String author,  String body)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String body,  QuoteGroup group)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Quote() when $default != null:
-return $default(_that.id,_that.author,_that.body);case _:
+return $default(_that.id,_that.body,_that.group);case _:
   return orElse();
 
 }
@@ -179,10 +179,10 @@ return $default(_that.id,_that.author,_that.body);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String author,  String body)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String body,  QuoteGroup group)  $default,) {final _that = this;
 switch (_that) {
 case _Quote():
-return $default(_that.id,_that.author,_that.body);case _:
+return $default(_that.id,_that.body,_that.group);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +199,10 @@ return $default(_that.id,_that.author,_that.body);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String author,  String body)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String body,  QuoteGroup group)?  $default,) {final _that = this;
 switch (_that) {
 case _Quote() when $default != null:
-return $default(_that.id,_that.author,_that.body);case _:
+return $default(_that.id,_that.body,_that.group);case _:
   return null;
 
 }
@@ -214,12 +214,12 @@ return $default(_that.id,_that.author,_that.body);case _:
 
 
 class _Quote implements Quote {
-  const _Quote({required this.id, required this.author, required this.body});
+  const _Quote({required this.id, required this.body, required this.group});
   
 
 @override final  int id;
-@override final  String author;
 @override final  String body;
+@override final  QuoteGroup group;
 
 /// Create a copy of Quote
 /// with the given fields replaced by the non-null parameter values.
@@ -231,18 +231,18 @@ _$QuoteCopyWith<_Quote> get copyWith => __$QuoteCopyWithImpl<_Quote>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Quote&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Quote&&(identical(other.id, id) || other.id == id)&&(identical(other.body, body) || other.body == body)&&(identical(other.group, group) || other.group == group));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,author,body);
+    return Object.hash(runtimeType,id,body,group);
 }
 
 @override
 String toString() {
-    return 'Quote(id: $id, author: $author, body: $body)';
+    return 'Quote(id: $id, body: $body, group: $group)';
 }
 
 
@@ -253,7 +253,7 @@ abstract mixin class _$QuoteCopyWith<$Res> implements $QuoteCopyWith<$Res> {
   factory _$QuoteCopyWith(_Quote value, $Res Function(_Quote) _then) = __$QuoteCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String author, String body
+ int id, String body, QuoteGroup group
 });
 
 
@@ -270,12 +270,12 @@ class __$QuoteCopyWithImpl<$Res>
 
 /// Create a copy of Quote
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? author = null,Object? body = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? body = null,Object? group = null,}) {
   return _then(_Quote(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
-as String,
+as int,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
+as String,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as QuoteGroup,
   ));
 }
 

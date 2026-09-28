@@ -26,7 +26,7 @@ void main() {
   });
 
   final style = BackgroundStyle(seed: _day.seed, palette: kPalettes.first);
-  final page = PadPage(day: _day, quote: kLongestAuthorQuote, header: style);
+  final page = PadPage(day: _day, quote: kLongestQuote, header: style);
 
   for (final themeEntry in {'light': lightTheme, 'dark': darkTheme}.entries) {
     testWidgets(

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_source.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 
 class _FakeBundle extends CachingAssetBundle {
   _FakeBundle(this._data);
@@ -17,7 +18,9 @@ class _FakeBundle extends CachingAssetBundle {
 }
 
 void main() {
-  const json = '[{"q":"Alpha quote","a":"A"},{"q":"Beta quote","a":"B"}]';
+  const json =
+      '[{"text":"Alpha quote","group":"grow"},'
+      '{"text":"Beta quote","group":"rest"}]';
 
   test('getRandomQuote returns a quote whose id is its array index', () async {
     // arrange — Random(0).nextInt(2) is deterministic
@@ -33,10 +36,10 @@ void main() {
     expect(quote.id, anyOf(0, 1));
     if (quote.id == 0) {
       expect(quote.text, 'Alpha quote');
-      expect(quote.author, 'A');
+      expect(quote.group, QuoteGroup.grow);
     } else {
       expect(quote.text, 'Beta quote');
-      expect(quote.author, 'B');
+      expect(quote.group, QuoteGroup.rest);
     }
   });
 
@@ -53,7 +56,7 @@ void main() {
     // assert
     expect(quote.id, 1);
     expect(quote.text, 'Beta quote');
-    expect(quote.author, 'B');
+    expect(quote.group, QuoteGroup.rest);
   });
 
   test('getQuoteById throws RangeError when the id is out of range', () async {
@@ -65,6 +68,18 @@ void main() {
 
     // act & assert
     expect(() => ds.getQuoteById(5), throwsA(isA<RangeError>()));
+  });
+
+  test('getQuoteById throws FormatException when the stored group id is '
+      'unknown', () async {
+    // arrange
+    final ds = QuoteLocalDataSourceImpl(
+      bundle: _FakeBundle('[{"text":"Alpha quote","group":"nope"}]'),
+      random: Random(0),
+    );
+
+    // act & assert
+    expect(() => ds.getQuoteById(0), throwsA(isA<FormatException>()));
   });
 
   test('parses the asset only once across calls', () async {

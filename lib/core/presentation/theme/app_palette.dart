@@ -31,7 +31,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// Primary text on paper.
   final Color ink;
 
-  /// Secondary text on paper (author line).
+  /// Secondary text on paper and desk chrome.
   final Color inkMuted;
 
   /// The board/cardboard band holding the pad at its top.

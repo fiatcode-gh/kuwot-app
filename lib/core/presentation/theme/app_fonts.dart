@@ -12,7 +12,7 @@ import 'package:flutter/painting.dart';
 ///   optical size matched to its rendered size, no wonk — a calmer, more
 ///   literary voice than the numeral).
 /// - **Space Grotesk** — a plain grotesk sans for everything that is a label
-///   rather than the "voice" of the page: weekday/month, the author line,
+///   rather than the "voice" of the page: weekday/month, control captions,
 ///   and the surrounding chrome.
 class AppFonts {
   const AppFonts._();
@@ -71,7 +71,7 @@ class AppFonts {
     );
   }
 
-  /// Body-weight Space Grotesk (author line, control captions).
+  /// Body-weight Space Grotesk (control captions and settings text).
   static TextStyle body({
     required double size,
     required Color color,

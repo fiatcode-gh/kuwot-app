@@ -9,6 +9,7 @@ import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/core/router/app_router.gr.dart';
 import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
 import 'package:kuwot/features/quote/presentation/quote_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +22,7 @@ import '../../../helpers/settings_fakes.dart';
 const _staleQuoteId = 100;
 const _staleQuote = Quote(
   id: _staleQuoteId,
-  author: 'Yesterday Author',
+  group: QuoteGroup.perspective,
   body: 'Yesterday Quote',
 );
 

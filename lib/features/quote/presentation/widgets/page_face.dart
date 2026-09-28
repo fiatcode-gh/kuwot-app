@@ -10,8 +10,8 @@ const kHeaderFlex = 9;
 const kQuoteFlex = 13;
 
 /// The full face of one pad page: header (date and generated background),
-/// perforation, then the quote and author. Used both for the on-screen top
-/// page and, at a fixed size, for [SharePageCard].
+/// perforation, then the quote. Used both for the on-screen top page and, at
+/// a fixed size, for [SharePageCard].
 class PageFace extends StatelessWidget {
   const PageFace({super.key, required this.page, required this.locale});
 

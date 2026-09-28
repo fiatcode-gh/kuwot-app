@@ -12,38 +12,35 @@ part of 'quote_model.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$QuoteModel {
 
- int get id; String get text; String get author;
+ int get id; String get text; QuoteGroup get group;
 /// Create a copy of QuoteModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $QuoteModelCopyWith<QuoteModel> get copyWith => _$QuoteModelCopyWithImpl<QuoteModel>(this as QuoteModel, _$identity);
 
-  /// Serializes this QuoteModel to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
   final _this = this as QuoteModel;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuoteModel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.author, _this.author) || other.author == _this.author));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuoteModel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.group, _this.group) || other.group == _this.group));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode {
   final _this = this as QuoteModel;
-  return Object.hash(runtimeType,_this.id,_this.text,_this.author);
+  return Object.hash(runtimeType,_this.id,_this.text,_this.group);
 }
 
 @override
 String toString() {
   final _this = this as QuoteModel;
-  return 'QuoteModel(id: ${_this.id}, text: ${_this.text}, author: ${_this.author})';
+  return 'QuoteModel(id: ${_this.id}, text: ${_this.text}, group: ${_this.group})';
 }
 
 
@@ -54,7 +51,7 @@ abstract mixin class $QuoteModelCopyWith<$Res>  {
   factory $QuoteModelCopyWith(QuoteModel value, $Res Function(QuoteModel) _then) = _$QuoteModelCopyWithImpl;
 @useResult
 $Res call({
- int id, String text, String author
+ int id, String text, QuoteGroup group
 });
 
 
@@ -71,12 +68,12 @@ class _$QuoteModelCopyWithImpl<$Res>
 
 /// Create a copy of QuoteModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? author = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? group = null,}) {
   return _then(QuoteModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
-as String,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as String,
+as String,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as QuoteGroup,
   ));
 }
 
@@ -161,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String text,  String author)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String text,  QuoteGroup group)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QuoteModel() when $default != null:
-return $default(_that.id,_that.text,_that.author);case _:
+return $default(_that.id,_that.text,_that.group);case _:
   return orElse();
 
 }
@@ -182,10 +179,10 @@ return $default(_that.id,_that.text,_that.author);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String text,  String author)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String text,  QuoteGroup group)  $default,) {final _that = this;
 switch (_that) {
 case _QuoteModel():
-return $default(_that.id,_that.text,_that.author);case _:
+return $default(_that.id,_that.text,_that.group);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +199,10 @@ return $default(_that.id,_that.text,_that.author);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String text,  String author)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String text,  QuoteGroup group)?  $default,) {final _that = this;
 switch (_that) {
 case _QuoteModel() when $default != null:
-return $default(_that.id,_that.text,_that.author);case _:
+return $default(_that.id,_that.text,_that.group);case _:
   return null;
 
 }
@@ -215,14 +212,14 @@ return $default(_that.id,_that.text,_that.author);case _:
 
 /// @nodoc
 
-@JsonSerializable(fieldRename: FieldRename.snake)
+
 class _QuoteModel implements QuoteModel {
-  const _QuoteModel({required this.id, required this.text, required this.author});
-  factory _QuoteModel.fromJson(Map<String, dynamic> json) => _$QuoteModelFromJson(json);
+  const _QuoteModel({required this.id, required this.text, required this.group});
+  
 
 @override final  int id;
 @override final  String text;
-@override final  String author;
+@override final  QuoteGroup group;
 
 /// Create a copy of QuoteModel
 /// with the given fields replaced by the non-null parameter values.
@@ -230,25 +227,22 @@ class _QuoteModel implements QuoteModel {
 @pragma('vm:prefer-inline')
 _$QuoteModelCopyWith<_QuoteModel> get copyWith => __$QuoteModelCopyWithImpl<_QuoteModel>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$QuoteModelToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuoteModel&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.author, author) || other.author == author));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuoteModel&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.group, group) || other.group == group));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,text,author);
+    return Object.hash(runtimeType,id,text,group);
 }
 
 @override
 String toString() {
-    return 'QuoteModel(id: $id, text: $text, author: $author)';
+    return 'QuoteModel(id: $id, text: $text, group: $group)';
 }
 
 
@@ -259,7 +253,7 @@ abstract mixin class _$QuoteModelCopyWith<$Res> implements $QuoteModelCopyWith<$
   factory _$QuoteModelCopyWith(_QuoteModel value, $Res Function(_QuoteModel) _then) = __$QuoteModelCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String text, String author
+ int id, String text, QuoteGroup group
 });
 
 
@@ -276,12 +270,12 @@ class __$QuoteModelCopyWithImpl<$Res>
 
 /// Create a copy of QuoteModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? text = null,Object? author = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? text = null,Object? group = null,}) {
   return _then(_QuoteModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
-as String,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
-as String,
+as String,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as QuoteGroup,
   ));
 }
 

@@ -85,12 +85,7 @@ void main() {
           SizedBox(
             width: 320,
             height: 300,
-            child: QuoteTypeBlock(
-              body: kLongestBodyQuote.body,
-              author: kLongestBodyQuote.author,
-              ink: Colors.black,
-              inkMuted: Colors.black54,
-            ),
+            child: QuoteTypeBlock(body: kLongestQuote.body, ink: Colors.black),
           ),
           textScale: 2.0,
         ),
@@ -102,44 +97,41 @@ void main() {
 
   group('SharePageCard (G10)', () {
     final themes = {'light': lightTheme, 'dark': darkTheme};
-    final quotes = [kLongestBodyQuote, kLongestAuthorQuote];
 
     for (final themeEntry in themes.entries) {
-      for (final quote in quotes) {
-        testWidgets(
-          'fits the whole page at 360x640, ${themeEntry.key} theme, quote '
-          '${quote.id}, at a large text scale',
-          (tester) async {
-            tester.view.physicalSize = const Size(800, 1400);
-            tester.view.devicePixelRatio = 1.0;
-            addTearDown(tester.view.reset);
+      testWidgets(
+        'fits the whole page at 360x640, ${themeEntry.key} theme, quote '
+        '${kLongestQuote.id}, at a large text scale',
+        (tester) async {
+          tester.view.physicalSize = const Size(800, 1400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
 
-            final page = PadPage(day: _day, quote: quote, header: style);
+          final page = PadPage(day: _day, quote: kLongestQuote, header: style);
 
-            await tester.pumpWidget(
-              padTestApp(
-                Center(
-                  child: SharePageCard(
-                    page: page,
-                    locale: const Locale('en', 'US'),
-                  ),
+          await tester.pumpWidget(
+            padTestApp(
+              Center(
+                child: SharePageCard(
+                  page: page,
+                  locale: const Locale('en', 'US'),
                 ),
-                theme: themeEntry.value,
-                textScale: 2.0,
               ),
-            );
+              theme: themeEntry.value,
+              textScale: 2.0,
+            ),
+          );
 
-            expect(
-              tester.getSize(find.byType(SharePageCard)),
-              const Size(360, 640),
-            );
-            expect(tester.takeException(), isNull);
-            expect(find.byType(SingleChildScrollView), findsNothing);
-            expect(find.text(quote.body), findsOneWidget);
-            expect(find.text('— ${quote.author}'), findsOneWidget);
-          },
-        );
-      }
+          expect(
+            tester.getSize(find.byType(SharePageCard)),
+            const Size(360, 640),
+          );
+          expect(tester.takeException(), isNull);
+          expect(find.byType(SingleChildScrollView), findsNothing);
+          expect(find.text(kLongestQuote.body), findsOneWidget);
+          expect(find.textContaining('—'), findsNothing);
+        },
+      );
     }
   });
 
@@ -163,18 +155,14 @@ void main() {
         expect(find.byType(SingleChildScrollView), findsNothing);
 
         final bodyFinder = find.text(quote.body);
-        final authorFinder = find.text('— ${quote.author}');
         expect(bodyFinder, findsOneWidget);
-        expect(authorFinder, findsOneWidget);
 
         // The rendered `Text`'s own (un-merged) style and size: `Text`'s
         // default `textWidthBasis` is `TextWidthBasis.parent`, so its
         // reported width is exactly the constraint it wrapped against —
         // safe to feed straight back into `measuredTextHeight`.
         final bodyText = tester.widget<Text>(bodyFinder);
-        final authorText = tester.widget<Text>(authorFinder);
         final bodyRenderSize = tester.getSize(bodyFinder);
-        final authorRenderSize = tester.getSize(authorFinder);
         final context = tester.element(bodyFinder);
         final textScaler = MediaQuery.textScalerOf(context);
 
@@ -185,13 +173,6 @@ void main() {
           maxWidth: bodyRenderSize.width,
           textScaler: textScaler,
         );
-        final measuredAuthorHeight = QuoteTypeBlock.measuredTextHeight(
-          context: context,
-          text: '— ${quote.author}',
-          style: authorText.style!,
-          maxWidth: authorRenderSize.width,
-          textScaler: textScaler,
-        );
 
         expect(
           (measuredBodyHeight - bodyRenderSize.height).abs(),
@@ -200,16 +181,9 @@ void main() {
               'body: measured $measuredBodyHeight vs rendered '
               '${bodyRenderSize.height}',
         );
-        expect(
-          (measuredAuthorHeight - authorRenderSize.height).abs(),
-          lessThanOrEqualTo(1.0),
-          reason:
-              'author: measured $measuredAuthorHeight vs rendered '
-              '${authorRenderSize.height}',
-        );
       }
 
-      for (final quote in [kLongestBodyQuote, kLongestAuthorQuote]) {
+      for (final quote in [kLongestQuote]) {
         testWidgets('SharePageCard box (360x640), quote ${quote.id}', (
           tester,
         ) async {
