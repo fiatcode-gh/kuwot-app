@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,7 +6,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/core/router/app_router.gr.dart';
-import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
 import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
@@ -99,12 +97,6 @@ _pumpQuotePageWithRouter(
     config: FakeQuoteGroupsConfig(),
     initialGroups: groups ?? QuoteGroup.values.toSet(),
   );
-  final purchaseBloc = MockInAppPurchaseBloc();
-  whenListen(
-    purchaseBloc,
-    const Stream<InAppPurchaseState>.empty(),
-    initialState: const ConsumableProductsLoadedState([]),
-  );
   final router = _TestAppRouter();
 
   await tester.pumpWidget(
@@ -118,7 +110,6 @@ _pumpQuotePageWithRouter(
             initialThemeMode: ThemeMode.system,
           ),
         ),
-        BlocProvider<InAppPurchaseBloc>.value(value: purchaseBloc),
       ],
       child: MaterialApp.router(
         theme: lightTheme,

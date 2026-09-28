@@ -8,7 +8,6 @@ import 'package:kuwot/core/presentation/bloc/app_bloc_observer.dart';
 import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/core/router/app_router.dart';
-import 'package:kuwot/features/in_app_purchase/presentation/in_app_purchase_listener.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'injection_container.dart' as ic;
@@ -110,21 +109,19 @@ class KuwotApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return OrientationLock(
       child: ic.getMultiBlocProvider(
-        child: InAppPurchaseListener(
-          child: BlocBuilder<ThemeModeCubit, ThemeMode>(
-            bloc: ic.getIt(),
-            builder: (context, state) {
-              return MaterialApp.router(
-                scaffoldMessengerKey: ic.getIt(),
-                debugShowCheckedModeBanner: false,
-                title: 'Kuwot',
-                theme: lightTheme,
-                darkTheme: darkTheme,
-                themeMode: state,
-                routerConfig: _appRouter.config(),
-              );
-            },
-          ),
+        child: BlocBuilder<ThemeModeCubit, ThemeMode>(
+          bloc: ic.getIt(),
+          builder: (context, state) {
+            return MaterialApp.router(
+              scaffoldMessengerKey: ic.getIt(),
+              debugShowCheckedModeBanner: false,
+              title: 'Kuwot',
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              themeMode: state,
+              routerConfig: _appRouter.config(),
+            );
+          },
         ),
       ),
     );
