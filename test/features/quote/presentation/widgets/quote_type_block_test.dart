@@ -6,11 +6,8 @@ import 'package:kuwot/features/quote/presentation/widgets/quote_type_block.dart'
 const _body =
     'A quote long enough that even the smallest allowed font size barely '
     'fits inside a box sized to match it almost exactly.';
-const _author = 'Someone, A Book';
 const _width = 320.0;
 const _minFontSize = 14.0;
-const _authorRatio = 0.42;
-const _gapRatio = 0.6;
 
 /// Mirrors `QuoteTypeBlock`'s own `heightAt` measurement at [_minFontSize],
 /// so the test can construct a box exactly on the fitting boundary rather
@@ -30,19 +27,7 @@ double _measureMinHeight() {
     textAlign: TextAlign.center,
     textDirection: TextDirection.ltr,
   )..layout(maxWidth: _width);
-  final authorSize = (_minFontSize * _authorRatio).clamp(12.0, 17.0);
-  final authorPainter = TextPainter(
-    text: TextSpan(
-      text: '— $_author',
-      style: TextStyle(
-        fontFamily: AppFonts.spaceGroteskFamily,
-        fontSize: authorSize,
-      ),
-    ),
-    textAlign: TextAlign.center,
-    textDirection: TextDirection.ltr,
-  )..layout(maxWidth: _width);
-  return bodyPainter.height + _minFontSize * _gapRatio + authorPainter.height;
+  return bodyPainter.height;
 }
 
 void main() {
@@ -59,9 +44,7 @@ void main() {
             height: height,
             child: const QuoteTypeBlock(
               body: _body,
-              author: _author,
               ink: Colors.black,
-              inkMuted: Colors.black54,
               minFontSize: _minFontSize,
             ),
           ),

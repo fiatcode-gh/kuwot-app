@@ -5,6 +5,7 @@ import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_so
 import 'package:kuwot/features/quote/data/models/quote_model.dart';
 import 'package:kuwot/features/quote/data/repositories/quote_repository_impl.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 
 class _MockLocalDataSource extends Mock implements QuoteLocalDataSource {}
 
@@ -19,26 +20,29 @@ void main() {
 
   test('getQuote maps a model to a Right(Quote)', () async {
     // arrange
-    when(() => dataSource.getRandomQuote()).thenAnswer(
-      (_) async => const QuoteModel(id: 3, text: 'Body', author: 'Author'),
+    const groups = {QuoteGroup.grow};
+    when(() => dataSource.getRandomQuote(groups)).thenAnswer(
+      (_) async =>
+          const QuoteModel(id: 3, text: 'Body', group: QuoteGroup.grow),
     );
 
     // act
-    final result = await repository.getQuote();
+    final result = await repository.getQuote(groups);
 
     // assert
     expect(
       result.getRight().toNullable(),
-      const Quote(id: 3, author: 'Author', body: 'Body'),
+      const Quote(id: 3, body: 'Body', group: QuoteGroup.grow),
     );
   });
 
   test('getQuote returns Left(Failure) when the data source throws', () async {
     // arrange
-    when(() => dataSource.getRandomQuote()).thenThrow(Exception('boom'));
+    const groups = {QuoteGroup.grow};
+    when(() => dataSource.getRandomQuote(groups)).thenThrow(Exception('boom'));
 
     // act
-    final result = await repository.getQuote();
+    final result = await repository.getQuote(groups);
 
     // assert
     expect(result.isLeft(), isTrue);
@@ -47,10 +51,11 @@ void main() {
   test('getQuote returns Left(UnknownFailure) when the data source throws '
       'an Error (e.g. from a missing asset or bad cast)', () async {
     // arrange
-    when(() => dataSource.getRandomQuote()).thenThrow(TypeError());
+    const groups = {QuoteGroup.grow};
+    when(() => dataSource.getRandomQuote(groups)).thenThrow(TypeError());
 
     // act
-    final result = await repository.getQuote();
+    final result = await repository.getQuote(groups);
 
     // assert
     expect(result.isLeft(), isTrue);
@@ -60,7 +65,8 @@ void main() {
   test('getQuoteById maps a model to a Right(Quote)', () async {
     // arrange
     when(() => dataSource.getQuoteById(1)).thenAnswer(
-      (_) async => const QuoteModel(id: 1, text: 'Body', author: 'Author'),
+      (_) async =>
+          const QuoteModel(id: 1, text: 'Body', group: QuoteGroup.grow),
     );
 
     // act
@@ -69,7 +75,7 @@ void main() {
     // assert
     expect(
       result.getRight().toNullable(),
-      const Quote(id: 1, author: 'Author', body: 'Body'),
+      const Quote(id: 1, body: 'Body', group: QuoteGroup.grow),
     );
   });
 

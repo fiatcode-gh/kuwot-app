@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,9 +6,10 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
 import 'package:kuwot/core/presentation/theme/app_theme.dart';
 import 'package:kuwot/core/router/app_router.gr.dart';
-import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
+import 'package:kuwot/features/quote/presentation/bloc/quote_groups_cubit.dart';
 import 'package:kuwot/features/quote/presentation/quote_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +21,7 @@ import '../../../helpers/settings_fakes.dart';
 const _staleQuoteId = 100;
 const _staleQuote = Quote(
   id: _staleQuoteId,
-  author: 'Yesterday Author',
+  group: QuoteGroup.perspective,
   body: 'Yesterday Quote',
 );
 
@@ -30,18 +30,33 @@ const _stalePrefs = {
       '{"v":1,"day":"2026-09-24","quoteId":$_staleQuoteId,"reroll":null}',
 };
 
-/// Pumps the real [QuotePage] on top of a real [PadBloc], the way it runs in
-/// the app, and waits for the first load to settle.
+/// Pumps the real [QuotePage] on top of a real [PadBloc] and a real
+/// [QuoteGroupsCubit] seeded with [groups] (defaulting to every group), the
+/// way it runs in the app, and waits for the first load to settle.
 Future<PadBloc> _pumpQuotePage(
   WidgetTester tester, {
   required FakeTime time,
   FakeQuoteRepository? quotes,
   Map<String, Object> initialPrefs = const {},
+  Set<QuoteGroup>? groups,
 }) async {
   SharedPreferences.setMockInitialValues(initialPrefs);
-  final bloc = await buildPadBloc(time: time, quotes: quotes);
+  final bloc = await buildPadBloc(time: time, quotes: quotes, groups: groups);
   await tester.pumpWidget(
-    padTestApp(BlocProvider.value(value: bloc, child: const QuotePage())),
+    padTestApp(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<PadBloc>.value(value: bloc),
+          BlocProvider<QuoteGroupsCubit>(
+            create: (_) => QuoteGroupsCubit(
+              config: FakeQuoteGroupsConfig(),
+              initialGroups: groups ?? QuoteGroup.values.toSet(),
+            ),
+          ),
+        ],
+        child: const QuotePage(),
+      ),
+    ),
   );
   await tester.pumpAndSettle();
   return bloc;
@@ -66,18 +81,21 @@ class _TestAppRouter extends RootStackRouter {
 
 /// Pumps the real [QuotePage] behind a real (generated) route stack, so
 /// tapping Settings drives an actual [StackRouter] push to
-/// [AppSettingsRoute] rather than a stand-in.
-Future<_TestAppRouter> _pumpQuotePageWithRouter(
+/// [AppSettingsRoute] rather than a stand-in. The [PadBloc] and a real
+/// [QuoteGroupsCubit] (seeded with [groups], defaulting to every group) sit
+/// beside [ThemeModeCubit], the way `getMultiBlocProvider` wires the app.
+Future<({_TestAppRouter router, PadBloc bloc, QuoteGroupsCubit cubit})>
+_pumpQuotePageWithRouter(
   WidgetTester tester, {
   required FakeTime time,
+  FakeQuoteRepository? quotes,
+  Set<QuoteGroup>? groups,
 }) async {
   SharedPreferences.setMockInitialValues({});
-  final bloc = await buildPadBloc(time: time);
-  final purchaseBloc = MockInAppPurchaseBloc();
-  whenListen(
-    purchaseBloc,
-    const Stream<InAppPurchaseState>.empty(),
-    initialState: const ConsumableProductsLoadedState([]),
+  final bloc = await buildPadBloc(time: time, quotes: quotes, groups: groups);
+  final cubit = QuoteGroupsCubit(
+    config: FakeQuoteGroupsConfig(),
+    initialGroups: groups ?? QuoteGroup.values.toSet(),
   );
   final router = _TestAppRouter();
 
@@ -85,13 +103,13 @@ Future<_TestAppRouter> _pumpQuotePageWithRouter(
     MultiBlocProvider(
       providers: [
         BlocProvider<PadBloc>.value(value: bloc),
+        BlocProvider<QuoteGroupsCubit>.value(value: cubit),
         BlocProvider<ThemeModeCubit>(
           create: (_) => ThemeModeCubit(
             themeModeConfig: FakeThemeModeConfig(),
             initialThemeMode: ThemeMode.system,
           ),
         ),
-        BlocProvider<InAppPurchaseBloc>.value(value: purchaseBloc),
       ],
       child: MaterialApp.router(
         theme: lightTheme,
@@ -100,7 +118,7 @@ Future<_TestAppRouter> _pumpQuotePageWithRouter(
     ),
   );
   await tester.pumpAndSettle();
-  return router;
+  return (router: router, bloc: bloc, cubit: cubit);
 }
 
 void main() {
@@ -251,7 +269,7 @@ void main() {
 
   group('dock Settings (D3)', () {
     testWidgets('tapping Settings pushes AppSettingsRoute', (tester) async {
-      final router = await _pumpQuotePageWithRouter(
+      final harness = await _pumpQuotePageWithRouter(
         tester,
         time: FakeTime(DateTime(2026, 9, 25)),
       );
@@ -259,7 +277,7 @@ void main() {
       await tester.tap(find.text('SETTINGS'));
       await tester.pumpAndSettle();
 
-      expect(router.current.name, AppSettingsRoute.name);
+      expect(harness.router.current.name, AppSettingsRoute.name);
     });
 
     testWidgets('there is no tip-jar or settings icon above the pad', (
@@ -269,5 +287,42 @@ void main() {
 
       expect(find.byType(IconButton), findsNothing);
     });
+  });
+
+  group('quote groups', () {
+    testWidgets(
+      'turning off a group in Settings and going back leaves the current '
+      'page unchanged, but the next draw comes from the remaining groups',
+      (tester) async {
+        final harness = await _pumpQuotePageWithRouter(
+          tester,
+          time: FakeTime(DateTime(2026, 9, 25)),
+        );
+        final top = (harness.bloc.state as PadReady).top;
+        final under = (harness.bloc.state as PadReady).under;
+        expect(top.quote.body, 'Quote 1');
+        expect(top.quote.group, QuoteGroup.perspective);
+        expect(under.quote.body, 'Quote 2');
+        expect(under.quote.group, QuoteGroup.perspective);
+
+        await tester.tap(find.text('SETTINGS'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilterChip, 'Perspective'));
+        await tester.pumpAndSettle();
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quote 1'), findsOneWidget);
+
+        await tester.tap(find.text('NEW QUOTE'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quote 3'), findsOneWidget);
+        expect(
+          (harness.bloc.state as PadReady).top.quote.group,
+          QuoteGroup.keepGoing,
+        );
+      },
+    );
   });
 }

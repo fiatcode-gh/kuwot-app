@@ -30,6 +30,16 @@ class PadRestyled extends PadEvent {
   List<Object> get props => [];
 }
 
+/// The quote group selection changed; later draws use [groups].
+class PadGroupsChanged extends PadEvent {
+  const PadGroupsChanged(this.groups);
+
+  final Set<QuoteGroup> groups;
+
+  @override
+  List<Object> get props => [groups];
+}
+
 /// Re-check the date, e.g. on app resume.
 class PadDayChecked extends PadEvent {
   const PadDayChecked();

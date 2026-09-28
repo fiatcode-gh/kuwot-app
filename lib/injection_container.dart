@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:kuwot/core/app_updater.dart';
 import 'package:kuwot/core/data/local/config.dart';
 import 'package:kuwot/core/data/local/theme_mode_config.dart';
 import 'package:kuwot/core/env.dart';
 import 'package:kuwot/core/presentation/bloc/config/theme_mode_cubit.dart';
 import 'package:kuwot/core/time.dart';
-import 'package:kuwot/features/in_app_purchase/data/data_sources/remote/in_app_purchase_remote_data_source.dart';
-import 'package:kuwot/features/in_app_purchase/data/repositories/in_app_purchase_repository_impl.dart';
-import 'package:kuwot/features/in_app_purchase/domain/repositories/in_app_purchase_repository.dart';
-import 'package:kuwot/features/in_app_purchase/domain/use_case/get_consumable_products.dart';
-import 'package:kuwot/features/in_app_purchase/domain/use_case/listen_purchase.dart';
-import 'package:kuwot/features/in_app_purchase/domain/use_case/purchase_consumable_product.dart';
-import 'package:kuwot/features/in_app_purchase/presentation/bloc/in_app_purchase_bloc.dart';
-import 'package:kuwot/features/in_app_purchase/presentation/bloc/purchase_details_cubit.dart';
 import 'package:kuwot/features/in_app_update/presentation/bloc/in_app_update_bloc.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/pad_snapshot_config.dart';
+import 'package:kuwot/features/quote/data/data_sources/local/quote_groups_config.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_source.dart';
 import 'package:kuwot/features/quote/data/repositories/pad_repository_impl.dart';
 import 'package:kuwot/features/quote/data/repositories/quote_repository_impl.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_snapshot.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/repositories/pad_repository.dart';
 import 'package:kuwot/features/quote/domain/repositories/quote_repository.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
@@ -30,6 +23,7 @@ import 'package:kuwot/features/quote/domain/use_cases/get_quote_by_id.dart';
 import 'package:kuwot/features/quote/domain/use_cases/load_pad_snapshot.dart';
 import 'package:kuwot/features/quote/domain/use_cases/save_pad_snapshot.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
+import 'package:kuwot/features/quote/presentation/bloc/quote_groups_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -53,13 +47,14 @@ void setup() {
     () => PadSnapshotConfig(sharedPreferences: getIt()),
     dependsOn: [SharedPreferences],
   );
+  getIt.registerSingletonWithDependencies<Config<Set<QuoteGroup>>>(
+    () => QuoteGroupsConfig(sharedPreferences: getIt()),
+    dependsOn: [SharedPreferences],
+  );
 
   // data sources
   getIt.registerLazySingleton<QuoteLocalDataSource>(
     () => QuoteLocalDataSourceImpl(),
-  );
-  getIt.registerLazySingleton<InAppPurchaseRemoteDataSource>(
-    () => InAppPurchaseRemoteDataSourceImpl(iap: getIt()),
   );
 
   // repositories
@@ -68,9 +63,6 @@ void setup() {
   );
   getIt.registerLazySingleton<PadRepository>(
     () => PadRepositoryImpl(config: getIt()),
-  );
-  getIt.registerLazySingleton<InAppPurchaseRepository>(
-    () => InAppPurchaseRepositoryImpl(inAppPurchaseDataSource: getIt()),
   );
 
   // use cases
@@ -81,13 +73,6 @@ void setup() {
   getIt.registerLazySingleton<BackgroundGenerator>(
     () => const BackgroundGenerator(),
   );
-  getIt.registerLazySingleton<GetConsumableProducts>(
-    () => GetConsumableProducts(getIt()),
-  );
-  getIt.registerLazySingleton<PurchaseConsumableProduct>(
-    () => PurchaseConsumableProduct(getIt()),
-  );
-  getIt.registerLazySingleton<ListenPurchase>(() => ListenPurchase(getIt()));
 
   // blocs
   getIt.registerSingletonAsync<ThemeModeCubit>(() async {
@@ -97,17 +82,15 @@ void setup() {
       initialThemeMode: initialThemeMode ?? ThemeMode.system,
     );
   }, dependsOn: [SharedPreferences, Config<ThemeMode>]);
+  getIt.registerSingletonAsync<QuoteGroupsCubit>(() async {
+    final initial = await getIt<Config<Set<QuoteGroup>>>().get();
+    return QuoteGroupsCubit(
+      config: getIt(),
+      initialGroups: initial ?? QuoteGroup.values.toSet(),
+    );
+  }, dependsOn: [SharedPreferences, Config<Set<QuoteGroup>>]);
   getIt.registerLazySingleton<InAppUpdateBloc>(
     () => InAppUpdateBloc(appUpdater: getIt()),
-  );
-  getIt.registerLazySingleton<InAppPurchaseBloc>(
-    () => InAppPurchaseBloc(
-      getConsumableProducts: getIt(),
-      purchaseConsumableProduct: getIt(),
-    ),
-  );
-  getIt.registerLazySingleton<PurchaseDetailsCubit>(
-    () => PurchaseDetailsCubit(getIt()),
   );
   getIt.registerFactory<PadBloc>(
     () => PadBloc(
@@ -117,13 +100,13 @@ void setup() {
       savePadSnapshot: getIt(),
       generator: getIt(),
       time: getIt(),
+      groups: getIt<QuoteGroupsCubit>().state,
     ),
   );
 
   // others
   getIt.registerLazySingleton<AppUpdater>(() => AppUpdaterImpl());
   getIt.registerLazySingleton<Time>(() => TimeImpl());
-  getIt.registerLazySingleton<InAppPurchase>(() => InAppPurchase.instance);
   getIt.registerLazySingleton<GlobalKey<ScaffoldMessengerState>>(
     () => GlobalKey<ScaffoldMessengerState>(),
   );
@@ -133,9 +116,8 @@ MultiBlocProvider getMultiBlocProvider({required Widget child}) {
   return MultiBlocProvider(
     providers: [
       BlocProvider<ThemeModeCubit>(create: (context) => getIt()),
+      BlocProvider<QuoteGroupsCubit>(create: (context) => getIt()),
       BlocProvider<InAppUpdateBloc>(create: (context) => getIt()),
-      BlocProvider<InAppPurchaseBloc>(create: (context) => getIt()),
-      BlocProvider<PurchaseDetailsCubit>(create: (context) => getIt()),
       BlocProvider<PadBloc>(create: (context) => getIt()),
     ],
     child: child,

@@ -190,7 +190,7 @@ class CalendarPadState extends State<CalendarPad> {
       container: true,
       label:
           '${labels.weekday} ${labels.month} ${widget.top.day.day}. '
-          '${widget.top.quote.body} — ${widget.top.quote.author}',
+          '${widget.top.quote.body}',
       child: ExcludeSemantics(
         child: PadFrame(
           page: widget.tearKind == TearKind.page

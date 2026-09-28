@@ -26,9 +26,8 @@ class AboutWidget extends StatelessWidget {
         ),
         _buildCreditItem(
           palette: palette,
-          title: 'Quotes-500K',
-          description: 'This app ships a curated subset of the quotes dataset by Shivali Goel, Rishi Madhok, Shweta Garg. Initially created for "Proposing Contextually Relevant Quotes for Images" journal.',
-          url: 'https://github.com/ShivaliGoel/Quotes-500K',
+          title: 'Quotes',
+          description: 'An original set written for Kuwot.',
         ),
       ],
     );
@@ -38,7 +37,7 @@ class AboutWidget extends StatelessWidget {
     required AppPalette palette,
     required String title,
     required String description,
-    required String url,
+    String? url,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -57,25 +56,27 @@ class AboutWidget extends StatelessWidget {
           description,
           style: AppFonts.body(size: 14, color: palette.inkMuted),
         ),
-        const SizedBox(height: 4),
-        InkWell(
-          onTap: () async {
-            await launchUrlString(url);
-          },
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                url,
-                style: AppFonts.body(size: 14, color: palette.ink).copyWith(
-                  decoration: TextDecoration.underline,
-                  decorationColor: palette.ink,
+        if (url != null) ...[
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: () async {
+              await launchUrlString(url);
+            },
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  url,
+                  style: AppFonts.body(size: 14, color: palette.ink).copyWith(
+                    decoration: TextDecoration.underline,
+                    decorationColor: palette.ink,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

@@ -5,7 +5,8 @@ import 'package:kuwot/core/presentation/theme/app_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kuwot/features/app_settings/presentation/widgets/about_widget.dart';
-import 'package:kuwot/features/in_app_purchase/presentation/tip_jar_section.dart';
+import 'package:kuwot/features/app_settings/presentation/widgets/quote_groups_section.dart';
+import 'package:kuwot/features/app_settings/presentation/widgets/tip_jar_section.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 @RoutePage()
@@ -63,6 +64,8 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           children: [
             themeSetting,
+            const SizedBox(height: 20),
+            const QuoteGroupsSection(),
             const SizedBox(height: 20),
             Card(
               child: Padding(

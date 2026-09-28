@@ -6,6 +6,7 @@ import 'package:kuwot/features/quote/data/data_sources/local/pad_snapshot_config
 import 'package:kuwot/features/quote/data/repositories/pad_repository_impl.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_snapshot.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/repositories/quote_repository.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
 import 'package:kuwot/features/quote/domain/use_cases/get_quote.dart';
@@ -34,7 +35,8 @@ class FakeTime implements Time {
 /// first, in order, before the auto-generated sequence resumes — for tests
 /// that need a specific fixture (e.g. the longest quote) to land on a
 /// particular draw without disturbing every other draw's id. Either call
-/// can be made to fail on demand via [failRandom] / [failById].
+/// can be made to fail on demand via [failRandom] / [failById]. Each call to
+/// [getQuote] records the groups it was asked to draw from in [drawnWith].
 class FakeQuoteRepository implements QuoteRepository {
   FakeQuoteRepository({Map<int, Quote>? seed, List<Quote> queue = const []})
     : _known = {...?seed},
@@ -47,8 +49,11 @@ class FakeQuoteRepository implements QuoteRepository {
   bool failRandom = false;
   bool failById = false;
 
+  final List<Set<QuoteGroup>> drawnWith = [];
+
   @override
-  Future<Either<Failure, Quote>> getQuote() async {
+  Future<Either<Failure, Quote>> getQuote(Set<QuoteGroup> groups) async {
+    drawnWith.add(groups);
     if (failRandom) {
       return left(const UnknownFailure(message: 'random draw failed'));
     }
@@ -57,7 +62,11 @@ class FakeQuoteRepository implements QuoteRepository {
       quote = _queue.removeAt(0);
     } else {
       final id = _nextId++;
-      quote = Quote(id: id, author: 'Author $id', body: 'Quote $id');
+      quote = Quote(
+        id: id,
+        body: 'Quote $id',
+        group: QuoteGroup.values.firstWhere(groups.contains),
+      );
     }
     _known[quote.id] = quote;
     return right(quote);
@@ -85,6 +94,7 @@ Future<PadBloc> buildPadBloc({
   FakeQuoteRepository? quotes,
   Config<PadSnapshot>? config,
   Duration timeout = const Duration(seconds: 2),
+  Set<QuoteGroup>? groups,
 }) async {
   final quoteRepository = quotes ?? FakeQuoteRepository();
   final padConfig =
@@ -101,5 +111,6 @@ Future<PadBloc> buildPadBloc({
     savePadSnapshot: SavePadSnapshot(padRepository),
     generator: const BackgroundGenerator(),
     time: time,
+    groups: groups ?? QuoteGroup.values.toSet(),
   );
 }

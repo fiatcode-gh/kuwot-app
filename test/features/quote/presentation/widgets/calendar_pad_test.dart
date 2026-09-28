@@ -12,6 +12,7 @@ import 'package:kuwot/features/quote/domain/entities/pad_day.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_page.dart';
 import 'package:kuwot/features/quote/domain/entities/palettes.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/presentation/widgets/calendar_pad.dart';
 import 'package:kuwot/features/quote/presentation/widgets/page_header.dart';
@@ -34,8 +35,8 @@ void main() {
   });
 
   final style = BackgroundStyle(seed: 1, palette: kPalettes.first);
-  const topQuote = Quote(id: 1, body: 'Top quote', author: 'A');
-  const underQuote = Quote(id: 2, body: 'Under quote', author: 'B');
+  const topQuote = Quote(id: 1, body: 'Top quote', group: QuoteGroup.grow);
+  const underQuote = Quote(id: 2, body: 'Under quote', group: QuoteGroup.rest);
 
   // Page tear: an older top page torn away to reveal today underneath.
   final pageTop = PadPage(day: _yesterday, quote: topQuote, header: style);
@@ -323,7 +324,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(tornCount.value, 1);
 
-      const nextQuote = Quote(id: 3, body: 'Next quote', author: 'C');
+      const nextQuote = Quote(
+        id: 3,
+        body: 'Next quote',
+        group: QuoteGroup.rest,
+      );
       final nextUnder = PadPage(day: _today, quote: nextQuote, header: style);
 
       await tester.pumpWidget(
@@ -362,6 +367,7 @@ void main() {
       final data = node.getSemanticsData();
 
       expect(data.label, contains('Top quote'));
+      expect(data.label, endsWith('Top quote'));
       expect(data.label, isNot(contains('Under quote')));
       expect(node.childrenCount, 0);
       expect(find.bySemanticsLabel(RegExp('Under quote')), findsNothing);
@@ -483,14 +489,14 @@ void main() {
           'The huge modern heresy is to alter the human soul to fit '
           'modern social conditions, instead of altering modern social '
           'conditions to fit the human soul.',
-      author: 'G.K. Chesterton',
+      group: QuoteGroup.grow,
     );
     const wideUnderQuote = Quote(
       id: 102,
       body:
           'Some men see things as they are and say why; I dream things '
           'that never were and say why not.',
-      author: 'George Bernard Shaw',
+      group: QuoteGroup.rest,
     );
     final widePageTop = PadPage(
       day: _yesterday,
