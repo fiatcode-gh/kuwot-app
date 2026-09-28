@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:kuwot/core/error/failure.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_source.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/repositories/quote_repository.dart';
 
 class QuoteRepositoryImpl implements QuoteRepository {
@@ -10,9 +11,9 @@ class QuoteRepositoryImpl implements QuoteRepository {
   final QuoteLocalDataSource localDataSource;
 
   @override
-  Future<Either<Failure, Quote>> getQuote() async {
+  Future<Either<Failure, Quote>> getQuote(Set<QuoteGroup> groups) async {
     try {
-      final model = await localDataSource.getRandomQuote();
+      final model = await localDataSource.getRandomQuote(groups);
       return right(Quote.fromModel(model));
     } on Object catch (e) {
       return left(

@@ -20,13 +20,14 @@ void main() {
 
   test('getQuote maps a model to a Right(Quote)', () async {
     // arrange
-    when(() => dataSource.getRandomQuote()).thenAnswer(
+    const groups = {QuoteGroup.grow};
+    when(() => dataSource.getRandomQuote(groups)).thenAnswer(
       (_) async =>
           const QuoteModel(id: 3, text: 'Body', group: QuoteGroup.grow),
     );
 
     // act
-    final result = await repository.getQuote();
+    final result = await repository.getQuote(groups);
 
     // assert
     expect(
@@ -37,10 +38,11 @@ void main() {
 
   test('getQuote returns Left(Failure) when the data source throws', () async {
     // arrange
-    when(() => dataSource.getRandomQuote()).thenThrow(Exception('boom'));
+    const groups = {QuoteGroup.grow};
+    when(() => dataSource.getRandomQuote(groups)).thenThrow(Exception('boom'));
 
     // act
-    final result = await repository.getQuote();
+    final result = await repository.getQuote(groups);
 
     // assert
     expect(result.isLeft(), isTrue);
@@ -49,10 +51,11 @@ void main() {
   test('getQuote returns Left(UnknownFailure) when the data source throws '
       'an Error (e.g. from a missing asset or bad cast)', () async {
     // arrange
-    when(() => dataSource.getRandomQuote()).thenThrow(TypeError());
+    const groups = {QuoteGroup.grow};
+    when(() => dataSource.getRandomQuote(groups)).thenThrow(TypeError());
 
     // act
-    final result = await repository.getQuote();
+    final result = await repository.getQuote(groups);
 
     // assert
     expect(result.isLeft(), isTrue);

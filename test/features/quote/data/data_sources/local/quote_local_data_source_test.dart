@@ -30,7 +30,7 @@ void main() {
     );
 
     // act
-    final quote = await ds.getRandomQuote();
+    final quote = await ds.getRandomQuote(QuoteGroup.values.toSet());
 
     // assert
     expect(quote.id, anyOf(0, 1));
@@ -88,11 +88,87 @@ void main() {
     final ds = QuoteLocalDataSourceImpl(bundle: bundle, random: Random(1));
 
     // act
-    await ds.getRandomQuote();
-    await ds.getRandomQuote();
+    await ds.getRandomQuote(QuoteGroup.values.toSet());
+    await ds.getRandomQuote(QuoteGroup.values.toSet());
 
     // assert
     expect(bundle.loadCount, 1);
+  });
+
+  const groupedJson =
+      '[{"text":"Grow 1","group":"grow"},'
+      '{"text":"Grow 2","group":"grow"},'
+      '{"text":"Grow 3","group":"grow"},'
+      '{"text":"Rest 1","group":"rest"},'
+      '{"text":"Courage 1","group":"courage"}]';
+
+  test('getRandomQuote(groups) returns only quotes from the selected group and '
+      'hits every quote in it', () async {
+    // arrange
+    final ds = QuoteLocalDataSourceImpl(
+      bundle: _FakeBundle(groupedJson),
+      random: Random(0),
+    );
+
+    // act
+    final seenIds = <int>{};
+    for (var i = 0; i < 50; i++) {
+      final quote = await ds.getRandomQuote({QuoteGroup.grow});
+      expect(quote.group, QuoteGroup.grow);
+      seenIds.add(quote.id);
+    }
+
+    // assert
+    expect(seenIds, {0, 1, 2});
+  });
+
+  test('getRandomQuote(groups) over several groups draws from their union and '
+      'never from an excluded group', () async {
+    // arrange
+    final ds = QuoteLocalDataSourceImpl(
+      bundle: _FakeBundle(groupedJson),
+      random: Random(1),
+    );
+
+    // act
+    final seenGroups = <QuoteGroup>{};
+    for (var i = 0; i < 50; i++) {
+      final quote = await ds.getRandomQuote({QuoteGroup.grow, QuoteGroup.rest});
+      expect(quote.group, isNot(QuoteGroup.courage));
+      seenGroups.add(quote.group);
+    }
+
+    // assert
+    expect(seenGroups, {QuoteGroup.grow, QuoteGroup.rest});
+  });
+
+  test('getRandomQuote throws ArgumentError for an empty group set', () async {
+    // arrange
+    final ds = QuoteLocalDataSourceImpl(
+      bundle: _FakeBundle(groupedJson),
+      random: Random(0),
+    );
+
+    // act & assert
+    expect(
+      () => ds.getRandomQuote(<QuoteGroup>{}),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
+  test('getRandomQuote throws StateError when the selected groups have no '
+      'quotes', () async {
+    // arrange
+    final ds = QuoteLocalDataSourceImpl(
+      bundle: _FakeBundle(groupedJson),
+      random: Random(0),
+    );
+
+    // act & assert
+    expect(
+      () => ds.getRandomQuote({QuoteGroup.people}),
+      throwsA(isA<StateError>()),
+    );
   });
 }
 

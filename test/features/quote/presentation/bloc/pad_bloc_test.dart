@@ -5,6 +5,7 @@ import 'package:kuwot/core/data/local/config.dart';
 import 'package:kuwot/features/quote/data/data_sources/local/pad_snapshot_config.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_day.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_snapshot.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
 import 'package:kuwot/features/quote/presentation/bloc/pad_bloc.dart';
@@ -498,4 +499,116 @@ void main() {
       await bloc.close();
     },
   );
+
+  group('quote groups', () {
+    test(
+      'a bloc restricted to one group only ever draws quotes from it',
+      () async {
+        final time = FakeTime(DateTime(2026, 3, 10));
+        final quotes = FakeQuoteRepository();
+        final bloc = await buildPadBloc(
+          time: time,
+          quotes: quotes,
+          groups: {QuoteGroup.grow},
+        );
+
+        bloc.add(const PadStarted());
+        await pumpEventQueue();
+
+        final ready = bloc.state as PadReady;
+        expect(ready.top.quote.group, QuoteGroup.grow);
+        expect(ready.under.quote.group, QuoteGroup.grow);
+        for (final drawnGroups in quotes.drawnWith) {
+          expect(drawnGroups.length, 1);
+          expect(drawnGroups.single, QuoteGroup.grow);
+        }
+
+        await bloc.close();
+      },
+    );
+
+    test('PadGroupsChanged redraws only the under quote when it is no longer '
+        'selected, keeping top/day/header/tearKind/revision and not '
+        'persisting; a later commit promotes the redrawn under, which was '
+        'itself drawn from the new groups', () async {
+      final time = FakeTime(DateTime(2026, 3, 10));
+      final quotes = FakeQuoteRepository();
+      final bloc = await buildPadBloc(time: time, quotes: quotes);
+      bloc.add(const PadStarted());
+      await pumpEventQueue();
+      final before = bloc.state as PadReady;
+      expect(before.under.quote.group, QuoteGroup.perspective);
+
+      final states = await _statesDuring(
+        bloc,
+        const PadGroupsChanged({QuoteGroup.keepGoing}),
+      );
+
+      expect(states, hasLength(1));
+      final after = states.single as PadReady;
+      expect(after.top, before.top);
+      expect(after.under.quote.group, QuoteGroup.keepGoing);
+      expect(after.under.quote.id, isNot(before.under.quote.id));
+      expect(after.under.day, before.under.day);
+      expect(after.under.header, before.under.header);
+      expect(after.tearKind, before.tearKind);
+      expect(after.revision, before.revision);
+
+      final savedAfterRedraw = await readSnapshot();
+      expect(savedAfterRedraw?.quoteId, before.top.quote.id);
+
+      bloc.add(PadTearCommitted(after.revision));
+      await pumpEventQueue();
+      final committed = bloc.state as PadReady;
+      expect(committed.top, after.under);
+      expect(quotes.drawnWith.last, {QuoteGroup.keepGoing});
+
+      await bloc.close();
+    });
+
+    test('PadGroupsChanged emits nothing when the current under quote is '
+        'still selected', () async {
+      final time = FakeTime(DateTime(2026, 3, 10));
+      final bloc = await buildPadBloc(time: time);
+      bloc.add(const PadStarted());
+      await pumpEventQueue();
+      final before = bloc.state as PadReady;
+      expect(before.under.quote.group, QuoteGroup.perspective);
+
+      final states = await _statesDuring(
+        bloc,
+        const PadGroupsChanged({QuoteGroup.perspective, QuoteGroup.grow}),
+      );
+
+      expect(states, isEmpty);
+      await bloc.close();
+    });
+
+    test('restarting with an unknown saved quote id falls back to a random '
+        'draw from the bloc\'s selected groups', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final config = PadSnapshotConfig(sharedPreferences: prefs);
+      await config.set(
+        const PadSnapshot(day: PadDay(2026, 3, 10), quoteId: 999),
+      );
+
+      final time = FakeTime(DateTime(2026, 3, 10));
+      final quotes = FakeQuoteRepository();
+      final bloc = await buildPadBloc(
+        time: time,
+        quotes: quotes,
+        config: config,
+        groups: {QuoteGroup.rest},
+      );
+
+      bloc.add(const PadStarted());
+      await pumpEventQueue();
+
+      final ready = bloc.state as PadReady;
+      expect(ready.top.quote.id, isNot(999));
+      expect(ready.top.quote.group, QuoteGroup.rest);
+
+      await bloc.close();
+    });
+  });
 }

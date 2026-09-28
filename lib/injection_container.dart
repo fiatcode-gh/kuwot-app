@@ -22,6 +22,7 @@ import 'package:kuwot/features/quote/data/data_sources/local/quote_local_data_so
 import 'package:kuwot/features/quote/data/repositories/pad_repository_impl.dart';
 import 'package:kuwot/features/quote/data/repositories/quote_repository_impl.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_snapshot.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/repositories/pad_repository.dart';
 import 'package:kuwot/features/quote/domain/repositories/quote_repository.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
@@ -117,6 +118,7 @@ void setup() {
       savePadSnapshot: getIt(),
       generator: getIt(),
       time: getIt(),
+      groups: QuoteGroup.values.toSet(),
     ),
   );
 

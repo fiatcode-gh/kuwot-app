@@ -13,6 +13,7 @@ import 'package:kuwot/features/quote/domain/entities/pad_day.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_page.dart';
 import 'package:kuwot/features/quote/domain/entities/pad_snapshot.dart';
 import 'package:kuwot/features/quote/domain/entities/quote.dart';
+import 'package:kuwot/features/quote/domain/entities/quote_group.dart';
 import 'package:kuwot/features/quote/domain/entities/tear_kind.dart';
 import 'package:kuwot/features/quote/domain/services/background_generator.dart';
 import 'package:kuwot/features/quote/domain/services/pad_calendar.dart';
@@ -26,7 +27,9 @@ part 'pad_states.dart';
 
 /// Drives the tear-off pad: which quote/header sit on top and underneath,
 /// which side the next tear removes, and the persisted last-viewed state.
-/// All events are serialised through a single handler (G1-G4, G9).
+/// Draws are restricted to the current quote group selection, updated via
+/// [PadGroupsChanged]. All events are serialised through a
+/// single handler (G1-G4, G9).
 class PadBloc extends Bloc<PadEvent, PadState> {
   PadBloc({
     required this.getQuote,
@@ -35,7 +38,9 @@ class PadBloc extends Bloc<PadEvent, PadState> {
     required this.savePadSnapshot,
     required this.generator,
     required this.time,
-  }) : super(const PadLoading()) {
+    required Set<QuoteGroup> groups,
+  }) : _groups = Set.unmodifiable(groups),
+       super(const PadLoading()) {
     on<PadEvent>(_onEvent, transformer: sequential());
   }
 
@@ -46,6 +51,7 @@ class PadBloc extends Bloc<PadEvent, PadState> {
   final BackgroundGenerator generator;
   final Time time;
 
+  Set<QuoteGroup> _groups;
   HeaderReroll? _reroll;
   PadSnapshot? _lastSaved;
   int _revision = 0;
@@ -60,6 +66,8 @@ class PadBloc extends Bloc<PadEvent, PadState> {
         _onRestyled(event, emit);
       case PadDayChecked():
         await _onDayChecked(event, emit);
+      case PadGroupsChanged():
+        await _onGroupsChanged(event, emit);
     }
   }
 
@@ -76,7 +84,7 @@ class PadBloc extends Bloc<PadEvent, PadState> {
     final Either<Failure, Quote> topQuoteResult;
     if (saved == null) {
       topDay = today;
-      topQuoteResult = await getQuote(const NoParams());
+      topQuoteResult = await getQuote(_groups);
     } else {
       topDay = saved.day.isAfter(today) ? today : saved.day;
       topQuoteResult = await _quoteById(saved.quoteId);
@@ -234,7 +242,37 @@ class PadBloc extends Bloc<PadEvent, PadState> {
   Future<Either<Failure, Quote>> _quoteById(int id) async {
     final result = await getQuoteById(id);
     if (result.isRight()) return result;
-    return getQuote(const NoParams());
+    return getQuote(_groups);
+  }
+
+  /// The selection changed: later draws use [event.groups]. If the current
+  /// under quote is no longer selected, redraws just that quote — top, day,
+  /// header, tear kind and revision are unchanged, and nothing is persisted
+  /// (like [PadRestyled], so a queued [PadTearCommitted] still commits it).
+  Future<void> _onGroupsChanged(
+    PadGroupsChanged event,
+    Emitter<PadState> emit,
+  ) async {
+    _groups = Set.unmodifiable(event.groups);
+    final current = state;
+    if (current is! PadReady || _groups.contains(current.under.quote.group)) {
+      return;
+    }
+
+    final quoteResult = await getQuote(_groups);
+    if (quoteResult.isLeft()) {
+      _emitFailure(emit, quoteResult);
+      return;
+    }
+    final quote = _rightValue(quoteResult);
+    emit(
+      PadReady(
+        top: current.top,
+        under: current.under.copyWith(quote: quote),
+        tearKind: current.tearKind,
+        revision: current.revision,
+      ),
+    );
   }
 
   /// Draws the page under [top]: a same-day new quote under the same header
@@ -244,7 +282,7 @@ class PadBloc extends Bloc<PadEvent, PadState> {
     TearKind kind,
     PadDay today,
   ) async {
-    final quoteResult = await getQuote(const NoParams());
+    final quoteResult = await getQuote(_groups);
     return quoteResult.fold(
       (failure) => left(failure),
       (quote) => right(
